@@ -20,5 +20,8 @@ main:
   - title: "References"
     url: /references/
     
+  - title: "Scripts and Workflows"
+    url: /scripts/
+    
   - title: "CV"
     url: /cv/

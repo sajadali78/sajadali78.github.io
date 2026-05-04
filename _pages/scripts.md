@@ -9,8 +9,10 @@ This section will contain various scripts, automation tools, and workflows for F
 
 ## Dual-Stator Sandwiched-Rotor Vernier Machine — Electromagnetic Design & Optimization
 
-<div style="text-align: center; margin-bottom: 2em;">
-  <iframe width="100%" height="450" src="https://www.youtube.com/embed/YEq4j4VT8O8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<div style="max-width: 600px; margin: 0 auto 2em auto;">
+  <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/YEq4j4VT8O8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+  </div>
 </div>
 
 Designed and modeled a high-torque dual-stator vernier machine in ANSYS Maxwell 2D, implementing a fully parametric geometry workflow for rapid design iteration and automated optimization.

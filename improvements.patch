@@ -1,7 +1,7 @@
 From 9957674b187c6a83fb2e08791ee0bc23fac44606 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Sat, 23 May 2026 20:52:23 +0000
-Subject: [PATCH] Improve security, accessibility, SEO, and code quality
+Subject: [PATCH 1/3] Improve security, accessibility, SEO, and code quality
 
 - Security: add rel="noopener noreferrer" to all external links
 - Security: upgrade Schema.org @context URLs from http:// to https://
@@ -423,6 +423,556 @@ index 0f36695..bd79f4c 100644
          elem.parentElement.classList.add("hidden");
  
          // Add the Plotly node
+-- 
+2.43.0
+
+
+From 3964993585c383b3763145c220d425736d18199f Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 23 May 2026 20:57:33 +0000
+Subject: [PATCH 2/3] Add .claude/ to .gitignore
+
+https://claude.ai/code/session_01SWH71k9A9hQYAYph49Xc7v
+---
+ .gitignore | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore b/.gitignore
+index b41392b..cff5418 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -18,6 +18,7 @@ package-lock.json
+ 
+ # Ignore folders related to IDEs
+ .vscode/
++.claude/
+ 
+ # Ignore files created by MacOS
+ .DS_Store
+-- 
+2.43.0
+
+
+From caf7dc480b747f1073af8062a49ae625b2cec348 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 24 May 2026 05:37:44 +0000
+Subject: [PATCH 3/3] Improve portfolio visual design and UI
+
+- Typography: load Inter (body) + Poppins (headings) from Google Fonts
+- Custom SCSS: new _sass/custom.scss with comprehensive style overrides
+  - Refined masthead with uppercase nav, hover highlights, backdrop blur
+  - Author avatar with teal border, shadow and hover scale effect
+  - Follow button as rounded pill with uppercase label
+  - Archive items as cards with hover lift and border highlight
+  - Smooth underline links in page content
+  - Section headings with teal bottom border (h2) and teal color (h3)
+  - Skill badge component (.skill-badge) for about page
+  - News entry component (.news-item / .news-date) for timeline
+  - Improved buttons with Poppins font and hover lift
+  - Footer with teal top border
+  - Dark theme adjustments for all new components
+- About page: restructured with skill badges and news timeline layout
+
+https://claude.ai/code/session_01SWH71k9A9hQYAYph49Xc7v
+---
+ _includes/head/custom.html |   5 +
+ _pages/about.md            |  52 ++++-
+ _sass/custom.scss          | 391 +++++++++++++++++++++++++++++++++++++
+ assets/css/main.scss       |   4 +-
+ 4 files changed, 444 insertions(+), 8 deletions(-)
+ create mode 100644 _sass/custom.scss
+
+diff --git a/_includes/head/custom.html b/_includes/head/custom.html
+index 22dd80d..bcd5efa 100644
+--- a/_includes/head/custom.html
++++ b/_includes/head/custom.html
+@@ -2,6 +2,11 @@
+ 
+ <!-- start custom head snippets -->
+ 
++<!-- Google Fonts: Inter (body) + Poppins (headings) -->
++<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
++<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700&display=swap">
++
+ <!-- Support for Academicons -->
+ <link rel="stylesheet" href="{{ base_path }}/assets/css/academicons.css"/>
+ 
+diff --git a/_pages/about.md b/_pages/about.md
+index 3534463..85573f0 100644
+--- a/_pages/about.md
++++ b/_pages/about.md
+@@ -7,14 +7,52 @@ redirect_from:
+   - /about.html
+ ---
+ 
+-Hi, I am Sajad Ali, a Master's-level researcher in electrical engineering with a focus on electromagnetic design and multi-objective optimization of synchronous machines. 
++Hi, I'm **Sajad Ali** — a Master's-level researcher in electrical engineering specializing in electromagnetic design and multi-objective optimization of synchronous machines.
+ 
+-I am highly motivated to apply machine-learning surrogate models and multi-objective optimization to the efficiency-driven design of next-generation synchronous machines (PCB motors, SynRMs, IPMs) for electrified mobility, robotics, and sustainable energy systems.
++I bridge **physics-based FEA simulation** with **machine-learning surrogate models** to accelerate the design of next-generation motors for electrified mobility, robotics, and sustainable energy.
+ 
+-## Research Profile
+-- **Synchronous Machine Design:** Hands-on with interior permanent magnet (IPM), spoke-type IPM, surface PM, dual-stator, and hybrid-rotor machines. Lead author of a peer-reviewed publication in *Nature Scientific Reports* (2026, IF 3.9) on a dual-stator hybrid-rotor synchronous–vernier machine.
+-- **FEA & Surrogate Modelling:** Experienced with Ansys Maxwell, Motor-CAD, and MATLAB/Simulink. Built large parametric Ansys Maxwell and Motor-CAD design sweeps; developed Python scripts to automate FEA runs and extract performance KPIs (torque, ripple, losses, efficiency).
+-- **Machine Learning Readiness:** Working knowledge of Python (NumPy, pandas, scikit-learn, PyTorch basics), regression and classification, and data pipelines for FEA datasets.
++---
++
++## Research Areas
++
++- **Synchronous Machine Design** — Hands-on with interior permanent magnet (IPM), spoke-type IPM, surface PM, dual-stator, and hybrid-rotor machines. Lead author in *Nature Scientific Reports* (2026, IF 3.9) on a dual-stator hybrid-rotor synchronous–vernier machine.
++- **FEA & Surrogate Modelling** — Experienced with Ansys Maxwell, Motor-CAD, and MATLAB/Simulink. Built large parametric design sweeps; developed Python automation for KPI extraction (torque, ripple, losses, efficiency).
++- **Machine Learning** — Python-based regression/classification models and data pipelines applied to FEA datasets for fast design-space exploration.
++
++## Skills
++
++**Simulation & Design**
++
++<span class="skill-badge">Ansys Maxwell</span>
++<span class="skill-badge">Motor-CAD</span>
++<span class="skill-badge">MATLAB/Simulink</span>
++<span class="skill-badge">FEA</span>
++<span class="skill-badge">Multi-objective Optimization</span>
++
++**Programming & ML**
++
++<span class="skill-badge">Python</span>
++<span class="skill-badge">NumPy</span>
++<span class="skill-badge">pandas</span>
++<span class="skill-badge">scikit-learn</span>
++<span class="skill-badge">PyTorch</span>
++
++**Machine Types**
++
++<span class="skill-badge">IPM</span>
++<span class="skill-badge">SynRM</span>
++<span class="skill-badge">PCB Motors</span>
++<span class="skill-badge">Vernier Machines</span>
++<span class="skill-badge">Dual-Stator</span>
++<span class="skill-badge">Hybrid-Rotor</span>
+ 
+ ## News & Updates
+-- **[Aug 2024 - Present]** Graduate Research Assistant at the Electrical Machines Lab, Sukkur IBA University.
++
++<div class="news-item">
++  <span class="news-date">Aug 2024 – Present</span>
++  <span>Graduate Research Assistant, Electrical Machines Lab, Sukkur IBA University.</span>
++</div>
++<div class="news-item">
++  <span class="news-date">2026</span>
++  <span>Lead author publication in <em>Nature Scientific Reports</em> (IF 3.9) on dual-stator hybrid-rotor synchronous–vernier machine.</span>
++</div>
+diff --git a/_sass/custom.scss b/_sass/custom.scss
+new file mode 100644
+index 0000000..cea1589
+--- /dev/null
++++ b/_sass/custom.scss
+@@ -0,0 +1,391 @@
++/* ==========================================================================
++   Custom Style Overrides — Sajad Ali Portfolio
++   ========================================================================== */
++
++/* --- Typography --- */
++
++body {
++  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
++  -webkit-font-smoothing: antialiased;
++  -moz-osx-font-smoothing: grayscale;
++}
++
++h1, h2, h3, h4, h5, h6,
++.page__title,
++.archive__item-title,
++.author__name {
++  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
++  letter-spacing: -0.02em;
++  line-height: 1.3;
++}
++
++/* --- Masthead / Navigation --- */
++
++.masthead {
++  box-shadow: 0 1px 0 var(--global-border-color), 0 4px 24px rgba(0, 0, 0, 0.05);
++  backdrop-filter: blur(8px);
++  -webkit-backdrop-filter: blur(8px);
++
++  &__menu-item a {
++    font-family: 'Poppins', sans-serif;
++    font-size: 0.78em;
++    font-weight: 500;
++    letter-spacing: 0.05em;
++    text-transform: uppercase;
++    padding: 0.35em 0.65em;
++    border-radius: 5px;
++    transition: background-color 0.15s ease, color 0.15s ease;
++
++    &:hover {
++      background-color: rgba(47, 127, 147, 0.1);
++      text-decoration: none;
++    }
++  }
++
++  &__menu-item.selected a {
++    background-color: rgba(47, 127, 147, 0.12);
++    color: var(--global-base-color);
++  }
++}
++
++/* --- Author Profile Sidebar --- */
++
++.sidebar {
++  .author__avatar {
++    text-align: center;
++    margin-bottom: 0.5em;
++
++    img {
++      border: 3px solid var(--global-base-color);
++      box-shadow: 0 4px 20px rgba(47, 127, 147, 0.22);
++      transition: transform 0.25s ease, box-shadow 0.25s ease;
++
++      &:hover {
++        transform: scale(1.04);
++        box-shadow: 0 8px 32px rgba(47, 127, 147, 0.35);
++      }
++    }
++  }
++
++  .author__name {
++    font-weight: 700;
++    font-size: 1.05em;
++    margin-top: 0.4em;
++  }
++
++  .author__pronouns {
++    font-size: 0.75em;
++    opacity: 0.6;
++    margin-top: -0.25em;
++    font-style: italic;
++  }
++
++  .author__bio {
++    font-size: 0.82em;
++    line-height: 1.65;
++    opacity: 0.82;
++  }
++
++  .author__urls-wrapper {
++    margin-top: 0.75em;
++  }
++
++  .author__urls.social-icons li {
++    font-size: 0.85em;
++
++    a {
++      border-radius: 4px;
++      padding: 3px 5px;
++      transition: background-color 0.15s ease;
++      display: inline-block;
++
++      &:hover {
++        background-color: rgba(47, 127, 147, 0.09);
++        text-decoration: none;
++      }
++    }
++  }
++
++  .btn--inverse {
++    border-radius: 20px;
++    font-family: 'Poppins', sans-serif;
++    font-size: 0.7em;
++    font-weight: 600;
++    letter-spacing: 0.06em;
++    text-transform: uppercase;
++    padding: 0.4em 1.4em;
++    transition: all 0.2s ease;
++
++    &:hover {
++      transform: translateY(-1px);
++      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
++    }
++  }
++}
++
++/* --- Page Content --- */
++
++.page__content {
++  font-size: 0.975em;
++  line-height: 1.78;
++
++  h2 {
++    margin-top: 1.8em;
++    padding-bottom: 0.4em;
++    border-bottom: 2px solid var(--global-base-color);
++    font-size: 1.35em;
++  }
++
++  h3 {
++    margin-top: 1.4em;
++    font-size: 1.1em;
++    color: var(--global-base-color);
++  }
++
++  strong {
++    font-weight: 600;
++  }
++
++  ul li {
++    margin-bottom: 0.45em;
++  }
++
++  a:not(.btn):not([rel="noopener noreferrer"]) {
++    text-decoration: none;
++    border-bottom: 1px solid rgba(47, 127, 147, 0.35);
++    transition: border-color 0.15s ease, color 0.15s ease;
++
++    &:hover {
++      border-bottom-color: var(--global-base-color);
++      color: var(--global-base-color);
++    }
++  }
++
++  hr {
++    border: none;
++    border-top: 1px solid var(--global-border-color);
++    margin: 1.8em 0;
++  }
++}
++
++/* --- Page Title --- */
++
++.page__title {
++  font-weight: 700;
++  letter-spacing: -0.03em;
++  line-height: 1.2;
++}
++
++/* --- Archive Items (Publications, Experience, etc.) --- */
++
++.archive__item {
++  padding: 1.25em 1.4em;
++  border-radius: 8px;
++  border: 1px solid var(--global-border-color);
++  margin-bottom: 0.85em;
++  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
++  background: var(--global-bg-color);
++
++  &:hover {
++    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
++    transform: translateY(-2px);
++    border-color: rgba(47, 127, 147, 0.4);
++  }
++
++  .archive__item-title {
++    font-size: 1em;
++    font-weight: 600;
++    line-height: 1.4;
++    margin-top: 0;
++    margin-bottom: 0.4em;
++
++    a {
++      text-decoration: none;
++      transition: color 0.15s ease;
++
++      &:hover {
++        color: var(--global-base-color);
++      }
++    }
++  }
++
++  .archive__item-excerpt {
++    font-size: 0.875em;
++    line-height: 1.65;
++    opacity: 0.78;
++    margin-top: 0.3em;
++  }
++
++  .page__meta,
++  .page__date {
++    font-size: 0.78em;
++    opacity: 0.7;
++  }
++}
++
++/* --- Skill Badges --- */
++
++.skill-badge {
++  display: inline-block;
++  background: rgba(47, 127, 147, 0.08);
++  color: var(--global-base-color);
++  border: 1px solid rgba(47, 127, 147, 0.28);
++  border-radius: 20px;
++  font-size: 0.78em;
++  font-weight: 500;
++  font-family: 'Poppins', sans-serif;
++  padding: 0.2em 0.85em;
++  margin: 0.2em 0.15em;
++  line-height: 1.9;
++  transition: all 0.15s ease;
++  white-space: nowrap;
++
++  &:hover {
++    background: rgba(47, 127, 147, 0.16);
++    border-color: var(--global-base-color);
++    transform: translateY(-1px);
++  }
++}
++
++/* --- News / Update entries --- */
++
++.news-item {
++  display: flex;
++  gap: 0.9em;
++  align-items: flex-start;
++  padding: 0.75em 0;
++  border-bottom: 1px solid var(--global-border-color);
++  font-size: 0.92em;
++
++  &:last-child {
++    border-bottom: none;
++  }
++}
++
++.news-date {
++  flex-shrink: 0;
++  font-family: 'Poppins', sans-serif;
++  font-size: 0.75em;
++  font-weight: 600;
++  color: var(--global-base-color);
++  background: rgba(47, 127, 147, 0.08);
++  border-radius: 4px;
++  padding: 0.2em 0.55em;
++  line-height: 1.9;
++  white-space: nowrap;
++}
++
++/* --- Buttons --- */
++
++.btn {
++  border-radius: 6px;
++  font-family: 'Poppins', sans-serif;
++  font-weight: 500;
++  font-size: 0.8em;
++  letter-spacing: 0.02em;
++  transition: all 0.2s ease;
++
++  &:hover {
++    transform: translateY(-1px);
++    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
++    text-decoration: none;
++  }
++}
++
++/* --- Footer --- */
++
++.page__footer {
++  border-top: 2px solid var(--global-base-color);
++  margin-top: 2em;
++
++  footer {
++    font-size: 0.8em;
++    opacity: 0.85;
++  }
++}
++
++.page__footer-follow .social-icons a {
++  border-radius: 4px;
++  padding: 3px 6px;
++  font-size: 0.88em;
++  transition: background-color 0.15s ease;
++
++  &:hover {
++    background-color: rgba(47, 127, 147, 0.1);
++    text-decoration: none;
++  }
++}
++
++/* --- Table of Contents --- */
++
++.toc {
++  border-radius: 8px;
++  font-size: 0.84em;
++
++  .toc__menu a {
++    font-size: 0.9em;
++    transition: color 0.15s ease;
++  }
++}
++
++/* --- Notices --- */
++
++.notice,
++.notice--info,
++.notice--warning,
++.notice--success,
++.notice--danger {
++  border-radius: 0 6px 6px 0;
++  font-size: 0.88em;
++}
++
++/* --- Breadcrumbs --- */
++
++.breadcrumbs {
++  font-family: 'Poppins', sans-serif;
++  font-size: 0.78em;
++  letter-spacing: 0.02em;
++}
++
++/* --- Smooth scroll offset for fixed masthead --- */
++
++html {
++  scroll-padding-top: 80px;
++}
++
++/* --- Permalink icon hide/show on hover --- */
++
++.archive__item-title a[rel="permalink"] {
++  opacity: 0;
++  transition: opacity 0.15s ease;
++  margin-left: 0.3em;
++}
++
++.archive__item-title:hover a[rel="permalink"] {
++  opacity: 0.5;
++}
++
++/* --- Dark theme adjustments --- */
++
++[data-theme="dark"] {
++  .skill-badge {
++    background: rgba(14, 161, 197, 0.12);
++    border-color: rgba(14, 161, 197, 0.3);
++  }
++
++  .archive__item {
++    &:hover {
++      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
++      border-color: rgba(14, 161, 197, 0.35);
++    }
++  }
++
++  .masthead__menu-item a:hover,
++  .masthead__menu-item.selected a {
++    background-color: rgba(14, 161, 197, 0.12);
++  }
++
++  .news-date {
++    background: rgba(14, 161, 197, 0.12);
++  }
++}
+diff --git a/assets/css/main.scss b/assets/css/main.scss
+index 761e33a..dabed91 100644
+--- a/assets/css/main.scss
++++ b/assets/css/main.scss
+@@ -39,5 +39,7 @@
+ 
+     "vendor/font-awesome/fontawesome",
+     "vendor/font-awesome/solid",
+-    "vendor/font-awesome/brands"
++    "vendor/font-awesome/brands",
++
++    "custom"
+ ;
+\ No newline at end of file
 -- 
 2.43.0
 

@@ -20,7 +20,8 @@ let determineComputedTheme = () => {
 };
 
 // detect OS/browser preference
-const browserPref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+const userPref = window.matchMedia.bind(window);
+const browserPref = userPref('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
 // Set the theme on page load or when explicitly called
 let setTheme = (theme) => {
@@ -40,7 +41,7 @@ let setTheme = (theme) => {
 };
 
 // Toggle the theme manually
-var toggleTheme = () => {
+const toggleTheme = () => {
   const current_theme = $("html").attr("data-theme");
   const new_theme = current_theme === "dark" ? "light" : "dark";
   localStorage.setItem("theme", new_theme);
@@ -60,8 +61,13 @@ if (plotlyElements.length > 0) {
   document.addEventListener("readystatechange", () => {
     if (document.readyState === "complete") {
       plotlyElements.forEach((elem) => {
-        // Parse the Plotly JSON data and hide it
-        var jsonData = JSON.parse(elem.textContent);
+        let jsonData;
+        try {
+          jsonData = JSON.parse(elem.textContent);
+        } catch (e) {
+          console.error("Failed to parse Plotly data:", e);
+          return;
+        }
         elem.parentElement.classList.add("hidden");
 
         // Add the Plotly node

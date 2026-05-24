@@ -7,14 +7,52 @@ redirect_from:
   - /about.html
 ---
 
-Hi, I am Sajad Ali, a Master's-level researcher in electrical engineering with a focus on electromagnetic design and multi-objective optimization of synchronous machines. 
+Hi, I'm **Sajad Ali** — a Master's-level researcher in electrical engineering specializing in electromagnetic design and multi-objective optimization of synchronous machines.
 
-I am highly motivated to apply machine-learning surrogate models and multi-objective optimization to the efficiency-driven design of next-generation synchronous machines (PCB motors, SynRMs, IPMs) for electrified mobility, robotics, and sustainable energy systems.
+I bridge **physics-based FEA simulation** with **machine-learning surrogate models** to accelerate the design of next-generation motors for electrified mobility, robotics, and sustainable energy.
 
-## Research Profile
-- **Synchronous Machine Design:** Hands-on with interior permanent magnet (IPM), spoke-type IPM, surface PM, dual-stator, and hybrid-rotor machines. Lead author of a peer-reviewed publication in *Nature Scientific Reports* (2026, IF 3.9) on a dual-stator hybrid-rotor synchronous–vernier machine.
-- **FEA & Surrogate Modelling:** Experienced with Ansys Maxwell, Motor-CAD, and MATLAB/Simulink. Built large parametric Ansys Maxwell and Motor-CAD design sweeps; developed Python scripts to automate FEA runs and extract performance KPIs (torque, ripple, losses, efficiency).
-- **Machine Learning Readiness:** Working knowledge of Python (NumPy, pandas, scikit-learn, PyTorch basics), regression and classification, and data pipelines for FEA datasets.
+---
+
+## Research Areas
+
+- **Synchronous Machine Design** — Hands-on with interior permanent magnet (IPM), spoke-type IPM, surface PM, dual-stator, and hybrid-rotor machines. Lead author in *Nature Scientific Reports* (2026, IF 3.9) on a dual-stator hybrid-rotor synchronous–vernier machine.
+- **FEA & Surrogate Modelling** — Experienced with Ansys Maxwell, Motor-CAD, and MATLAB/Simulink. Built large parametric design sweeps; developed Python automation for KPI extraction (torque, ripple, losses, efficiency).
+- **Machine Learning** — Python-based regression/classification models and data pipelines applied to FEA datasets for fast design-space exploration.
+
+## Skills
+
+**Simulation & Design**
+
+<span class="skill-badge">Ansys Maxwell</span>
+<span class="skill-badge">Motor-CAD</span>
+<span class="skill-badge">MATLAB/Simulink</span>
+<span class="skill-badge">FEA</span>
+<span class="skill-badge">Multi-objective Optimization</span>
+
+**Programming & ML**
+
+<span class="skill-badge">Python</span>
+<span class="skill-badge">NumPy</span>
+<span class="skill-badge">pandas</span>
+<span class="skill-badge">scikit-learn</span>
+<span class="skill-badge">PyTorch</span>
+
+**Machine Types**
+
+<span class="skill-badge">IPM</span>
+<span class="skill-badge">SynRM</span>
+<span class="skill-badge">PCB Motors</span>
+<span class="skill-badge">Vernier Machines</span>
+<span class="skill-badge">Dual-Stator</span>
+<span class="skill-badge">Hybrid-Rotor</span>
 
 ## News & Updates
-- **[Aug 2024 - Present]** Graduate Research Assistant at the Electrical Machines Lab, Sukkur IBA University.
+
+<div class="news-item">
+  <span class="news-date">Aug 2024 – Present</span>
+  <span>Graduate Research Assistant, Electrical Machines Lab, Sukkur IBA University.</span>
+</div>
+<div class="news-item">
+  <span class="news-date">2026</span>
+  <span>Lead author publication in <em>Nature Scientific Reports</em> (IF 3.9) on dual-stator hybrid-rotor synchronous–vernier machine.</span>
+</div>

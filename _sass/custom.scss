@@ -299,8 +299,7 @@ h1, h2, h3, h4, h5, h6,
   margin-top: 2em;
 
   footer {
-    font-size: 0.8em;
-    opacity: 0.85;
+    font-size: 0.85em;
   }
 }
 
@@ -355,13 +354,14 @@ html {
 
 /* --- Permalink icon hide/show on hover --- */
 
-.archive__item-title a[rel="permalink"] {
+.archive__item-title a.archive__permalink {
   opacity: 0;
   transition: opacity 0.15s ease;
   margin-left: 0.3em;
 }
 
-.archive__item-title:hover a[rel="permalink"] {
+.archive__item-title:hover a.archive__permalink,
+.archive__item-title a.archive__permalink:focus {
   opacity: 0.5;
 }
 

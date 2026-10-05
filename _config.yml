@@ -10,6 +10,7 @@
 locale                   : "en-US"
 site_theme               : "default" # The available themes options are "default", "air", "sunrise", "mint", "dirt" and "contrast"
 title                    : "Sajad Ali | Electrical Machine Design & Optimization"
+masthead_title           : "Sajad Ali" # Short title shown in the top navigation bar
 title_separator          : "-"
 name                     : &name "Sajad Ali"
 description              : &description "Academic portfolio of Sajad Ali — Graduate Researcher in Electrical Machine Design & Optimization at Sukkur IBA University. Specializing in synchronous machines, FEA, and ML-based surrogate modeling."

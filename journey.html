@@ -374,12 +374,17 @@ function drawLoops(vis,vm,time,px){
       }}});
   ctx.setLineDash([]);}
 
+let KO=null;
 function label(x,y,dx,dy,text,alpha,align){
   if(alpha<.02)return;ctx.save();ctx.globalAlpha=alpha;text=text.toUpperCase();
   ctx.font="500 10.5px IBM Plex Mono, monospace";const tw=ctx.measureText(text).width;
   let right=align==="right";if(!right&&x+dx+24+tw>W-48){right=true;dx=-Math.abs(dx);}else if(right&&x-Math.abs(dx)-24-tw<8){right=false;dx=Math.abs(dx);}
   if(right)dx=-Math.abs(dx);
   if(x<-20||x>W+20||y<-20||y>H+20){ctx.restore();return;}
+  if(KO){ // keep labels out from under the chapter copy: try the other side, else drop the label
+    const hit=()=>{let t=x+dx+(right?-24:24);t=right?Math.max(8+tw,t):Math.min(W-48-tw,t);const x0=right?t-tw:t,yy=y+dy;
+      return x0+tw>KO.left-12&&x0<KO.right+12&&yy+8>KO.top-6&&yy-8<KO.bottom+6;};
+    if(hit()){right=!right;dx=right?-Math.abs(dx):Math.abs(dx);if(hit()){ctx.restore();return;}}}
   ctx.strokeStyle="rgba(208,134,74,.9)";ctx.fillStyle="#d0864a";ctx.lineWidth=1;
   ctx.beginPath();ctx.arc(x,y,2.6,0,TAU);ctx.fill();
   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+dx,y+dy);ctx.lineTo(x+dx+(right?-18:18),y+dy);ctx.stroke();
@@ -388,6 +393,7 @@ function label(x,y,dx,dy,text,alpha,align){
   ctx.fillText(text,tx,y+dy);ctx.restore();}
 
 function annotations(c,ts,S){
+  KO=!mobile&&chapters[c.i]?chapters[c.i].getBoundingClientRect():null;
   const vis=i=>c.i===i?(i===0?1:sm(.06,.16,c.t))*(1-sm(.6,.72,c.t)):0;
   const L=mobile?.0:1;
   let v=vis(0);if(v){const f=mobile?-1:1;

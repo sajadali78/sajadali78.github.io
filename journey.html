@@ -392,7 +392,7 @@ function annotations(c,ts,S){
   const L=mobile?.0:1;
   let v=vis(0);if(v){const f=mobile?-1:1;
     label(...ts(...pol(186,TOP-0.9)),-60*f,-30,"Housing · 40 fins",v,f>0?"right":"left");
-    label(...ts(...pol(150,TOP-2.2)),-70,10,"Outer stator · 24 slots",v,"right");
+    label(...ts(...pol(150,TOP-2.2)),mobile?-70:70,10,"Outer stator · 24 slots",v,mobile?"right":"left");
     label(...ts(...pol(100,TOP+2.6)),-70,40,"Hybrid rotor",v,"right");
     label(...ts(...pol(62,TOP+1.9)),-80,70,"Inner stator · 12 slots",v,"right");}
   v=vis(1);if(v){const a=TOP;

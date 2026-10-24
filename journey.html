@@ -1,0 +1,465 @@
+---
+layout: null
+permalink: /
+title: "Inside the Machine"
+sitemap: true
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/images/favicon-32x32.png">
+<title>Inside the Machine</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Sajad Ali — a scroll-driven walk through a dual-stator hybrid-rotor electrical machine, from stator slots to ML surrogate models.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/css/steel.css">
+<style>
+/* Layout: one fixed full-screen "machine viewport" canvas; scroll drives a continuous camera; chapter copy sits in the empty side of each shot. Single dark look (electrical steel + copper). */
+:root{
+  --steel-0:#12181c;   /* page ground: blued lamination steel */
+  --steel-1:#1b2328;   /* panels */
+  --steel-2:#36424a;   /* iron at rest */
+  --line:#5d6b73;      /* hairlines, ticks */
+  --copper:#d0864a;    /* accent: winding copper */
+  --text:#e9e4da;      /* warm paper white */
+  --muted:#9aa5a8;
+  --display:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--steel-0)}
+body{background:var(--steel-0);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.6;margin:0}
+a{color:var(--copper);text-underline-offset:3px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--copper);outline-offset:3px}
+
+#stage{position:fixed;inset:0;overflow:hidden}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 60% 50%,transparent 45%,rgba(6,9,11,.75) 100%)}
+
+header.bar{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:14px;
+  padding-left:max(24px, env(safe-area-inset-left,0px));padding-right:max(24px, env(safe-area-inset-right,0px));
+  background:linear-gradient(var(--steel-0) 40%,transparent)}
+.bar .right{display:flex;gap:20px;align-items:center}
+.bar .chap-label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+@media (max-width:1180px){.bar .chap-label{display:none}}
+
+nav.chapters{position:absolute;z-index:5;right:max(18px, env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px}
+nav.chapters button{all:unset;cursor:pointer;width:26px;height:26px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line);transition:background .3s,color .3s,border-color .3s}
+nav.chapters button[aria-current="step"]{background:var(--copper);border-color:var(--copper);color:var(--steel-0)}
+nav.chapters button:hover{border-color:var(--copper);color:var(--text)}
+
+.chapter{position:absolute;z-index:4;top:50%;width:min(420px,38vw);transform:translateY(-50%);will-change:opacity,transform}
+.chapter.left::before,.chapter.right::before{content:"";position:absolute;top:-140px;bottom:-140px;z-index:-1;pointer-events:none;
+  -webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)}
+.chapter.left::before{left:-400px;right:-170px;background:linear-gradient(90deg,rgba(18,24,28,.94),rgba(18,24,28,.86) 72%,transparent)}
+.chapter.right::before{right:-400px;left:-170px;background:linear-gradient(270deg,rgba(18,24,28,.94),rgba(18,24,28,.86) 72%,transparent)}
+@media (max-width:760px){.chapter.left::before,.chapter.right::before{display:none}}
+.chapter.left{left:max(56px, env(safe-area-inset-left,0px))}
+.chapter.right{right:max(84px, calc(env(safe-area-inset-right,0px) + 64px))}
+.chapter.bottom{top:auto;bottom:calc(48px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:min(760px,86vw);text-align:center}
+.eyebrow{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:14px}
+.chapter.bottom .eyebrow{justify-content:center}
+.seal{display:inline-grid;place-items:center;width:22px;height:22px;background:var(--copper);color:var(--steel-0);font-size:10px;letter-spacing:0}
+h1,h2{font-family:var(--display);font-weight:400;line-height:1.02;margin:0 0 18px;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(40px,5.4vw,76px)} h2{font-size:clamp(34px,4.2vw,58px)}
+h1 em,h2 em{color:var(--copper)}
+.chapter p{margin:0 0 12px;color:#cfd2cd;max-width:62ch}
+.meta{margin-top:18px;padding-top:12px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;line-height:1.7;letter-spacing:.04em;color:var(--muted)}
+.links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 10px;margin-top:20px}
+.links a{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-decoration:none;color:var(--text);border:1px solid var(--line);padding:8px 14px}
+.links a:hover{border-color:var(--copper);color:var(--copper)}
+.links a.primary{background:var(--copper);border-color:var(--copper);color:var(--steel-0)}
+.email{margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted);user-select:all}
+.hint{position:absolute;z-index:4;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.hint i{display:block;width:1px;height:28px;margin:8px auto 0;background:linear-gradient(var(--copper),transparent);animation:drip 1.8s ease-in-out infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.progress{position:absolute;z-index:5;left:0;bottom:0;height:2px;background:var(--copper);width:0}
+#track{position:relative;z-index:0;pointer-events:none} /* spacer that sets scroll length; must not cover the page */
+
+@media (max-width:760px){
+  header.bar{padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+  .chapter,.chapter.left,.chapter.right,.chapter.bottom{left:0;right:0;top:auto;bottom:0;width:auto;transform:none;text-align:left;
+    padding:64px max(16px, env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-right,0px));
+    padding-right:max(52px, calc(env(safe-area-inset-right,0px) + 44px));
+    background:linear-gradient(transparent, rgba(18,24,28,.92) 56px, var(--steel-0))}
+  .chapter.bottom .eyebrow{justify-content:flex-start}
+  .links{justify-content:flex-start}
+  h1{font-size:40px} h2{font-size:32px}
+  .chapter p{font-size:14px}
+  .chapter p + p{display:none}
+  .chapter.c6 p + p{display:block}
+  nav.chapters{right:max(10px, env(safe-area-inset-right,0px));top:96px;transform:none}
+  .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .hint i{animation:none} }
+</style>
+</head>
+<body>
+
+<div id="stage" aria-hidden="false">
+  <canvas id="cv" role="img" aria-label="Animated cross-section of a dual-stator hybrid-rotor electrical machine"></canvas>
+  <div class="grain"></div><div class="vignette"></div>
+
+  <header class="bar">
+    <a class="brand" href="/"><b>Sajad Ali</b><span>Inside the Machine</span></a>
+    <div class="right"><span class="chap-label" id="chapLabel">01 · The machine</span>{% include steel-nav.html %}</div>
+  </header>
+
+  <nav class="chapters" aria-label="Chapters" id="nav"></nav>
+
+  <section class="chapter left c1" data-i="0">
+    <div class="eyebrow"><span class="seal">01</span>The machine</div>
+    <h1>A motor, seen from <em>the inside</em></h1>
+    <p>I'm Sajad Ali, an electrical engineer from Sukkur, Pakistan. I design electrical machines with finite element analysis, and I use machine learning to make that design process faster.</p>
+    <p>Scroll to travel through one of my machines: into a stator slot, across the airgap, around the rotor, and out into the data that shapes it.</p>
+    <div class="meta">M.E. Electrical Engineering (Power Systems) · Sukkur IBA University · 2026<br>B.E. Electrical Engineering · Sukkur IBA University · 2022</div>
+  </section>
+
+  <section class="chapter right c2" data-i="1">
+    <div class="eyebrow"><span class="seal">02</span>Outer stator</div>
+    <h2>Twenty-four slots of <em>copper</em></h2>
+    <p>Torque starts in the stator. Each slot holds a double-layer coil behind a liner and a wedge, and the order of the three phases around the bore decides how smoothly the field turns.</p>
+    <p>My feel for real windings comes from the field: commissioning electrical equipment with NETS International, and working as a trainee engineer on the PTCL–NTDC SD-WAN project.</p>
+    <div class="meta">Field Engineer · NETS International · 2023</div>
+  </section>
+
+  <section class="chapter left c3" data-i="2">
+    <div class="eyebrow"><span class="seal">03</span>Airgap</div>
+    <h2>Half a millimetre where <em>the work happens</em></h2>
+    <p>Flux crosses from rotor to stator through a 0.5 mm airgap. Small changes to slot openings, magnet arcs and skew show up directly as torque ripple.</p>
+    <p>In my thesis machine, skewing the stator and magnets by 4° cut low-speed torque ripple from 73% to 27%.</p>
+    <div class="meta">Ansys Maxwell · Motor-CAD · PyAEDT scripting · MATLAB/Simulink</div>
+  </section>
+
+  <section class="chapter right c4" data-i="3">
+    <div class="eyebrow"><span class="seal">04</span>Hybrid rotor</div>
+    <h2>One rotor, <em>two ways</em> to run</h2>
+    <p>My master's thesis proposed a brushless dual-stator machine with a hybrid rotor. It runs as a synchronous machine at high speed and as a Vernier machine at low speed, with no brushes or slip rings.</p>
+    <p>The design is published in <a href="https://doi.org/10.1038/s41598-026-40821-y" target="_blank" rel="noopener"><i>Scientific Reports</i> (Nature, 2026)</a>, with me as lead author.</p>
+    <div class="meta">Graduate Research Assistant · Electrical Machines Lab, Sukkur IBA · 2024–</div>
+  </section>
+
+  <section class="chapter left c5" data-i="4">
+    <div class="eyebrow"><span class="seal">05</span>Surrogate models</div>
+    <h2>From field solutions to <em>fast predictions</em></h2>
+    <p>Each FEA run is accurate but slow. I sample the design space with scripted simulations, train surrogate models such as Gaussian process regression and physics-informed neural networks, and search the trade-offs with NSGA-II.</p>
+    <p>Earlier I minimized torque ripple in an IPM spoke-type motor, presented at <a href="https://doi.org/10.1109/ELMA.2025.11083385" target="_blank" rel="noopener">IEEE ELMA 2025</a> in Sofia.</p>
+    <div class="meta">Python · PyTorch · scikit-learn · GPR · PINNs · NSGA-II</div>
+  </section>
+
+  <section class="chapter bottom c6" data-i="5">
+    <div class="eyebrow"><span class="seal">06</span>Next</div>
+    <h2>Looking for <em>the next machine</em></h2>
+    <p>I'm seeking a PhD position in electrical machine design, where FEA and machine learning work together inside the optimization loop.</p>
+    <div class="links">
+      <a class="primary" href="/cv/">CV</a>
+      <a href="/publications/">Publications</a>
+      <a href="/thesis/">Thesis</a>
+      <a href="https://scholar.google.com/citations?user=6XbeJKIAAAAJ&amp;hl=en" target="_blank" rel="noopener">Google Scholar</a>
+      <a href="https://www.linkedin.com/in/sajad-ali-engineer" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://orcid.org/0009-0003-7832-9279" target="_blank" rel="noopener">ORCID</a>
+    </div>
+    <div class="email">Sajadali.meees24@iba-suk.edu.pk</div>
+  </section>
+
+  <div class="hint" id="hint">Scroll<i></i></div>
+  <div class="progress" id="progress"></div>
+</div>
+<div id="track"></div>
+
+<script>
+(function(){
+"use strict";
+const TAU=Math.PI*2, N=6, TR=0.72; // transition starts at 72% of each chapter
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+const track=document.getElementById("track");
+const chapters=[...document.querySelectorAll(".chapter")];
+const labelsTxt=["01 · The machine","02 · Outer stator","03 · Airgap","04 · Hybrid rotor","05 · Surrogate models","06 · Next"];
+const nav=document.getElementById("nav");
+const navBtns=labelsTxt.map((l,i)=>{const b=document.createElement("button");b.textContent=String(i+1).padStart(2,"0");b.setAttribute("aria-label","Go to chapter "+l);b.onclick=()=>jump(i);nav.appendChild(b);return b;});
+
+/* ---------- geometry (world units ≈ mm) ---------- */
+const R={fin:212,house:190,osOut:172,slotTop:160,slotBot:124,osIn:121,rotOut:118.5,pmIn:111,rotIn:80,isOut:77.5,isSlotIn:50,isIn:44,shaft:26};
+const NS=24, NR=24, NIS=12, NPM=12, NFS=6;
+const pol=(r,a)=>[r*Math.cos(a),r*Math.sin(a)];
+const TOP=-Math.PI/2;
+function sector(r1,r2,a1,a2){ctx.beginPath();ctx.arc(0,0,r2,a1,a2);ctx.arc(0,0,r1,a2,a1,true);ctx.closePath();}
+function poly(pts){ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();}
+
+/* colour */
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const STOPS=[[0,hex("#1d3a52")],[.35,hex("#2f7f86")],[.6,hex("#8fb27a")],[.8,hex("#e3a64b")],[1,hex("#e2583a")]];
+function cmap(v){v=Math.max(0,Math.min(1,v));for(let i=1;i<STOPS.length;i++){if(v<=STOPS[i][0]){const a=STOPS[i-1],b=STOPS[i],t=(v-a[0])/(b[0]-a[0]);return a[1].map((c,k)=>c+(b[1][k]-c)*t);}}return STOPS[4][1];}
+const IRON=hex("#3a464e");
+function ironCol(v,vis){const c=cmap(v);return "rgb("+IRON.map((x,k)=>Math.round(x+(c[k]-x)*vis)).join(",")+")";}
+const PHASE=["#d0864a","#b8a06a","#9b5c3c"];
+
+/* seeded rng */
+let seed=7;const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+
+/* FEA mesh (structured rings, merged triangulation) */
+const ringR=[26,32,38,44,50,56,62,68,73,77.5,80,86,92,98,104,109,113,116,118.5,119.5,121,124,130,137,144,151,158,165,172];
+const rings=ringR.map(r=>{const h=r>110&&r<126?2.4:r>70&&r<84?4:6.5;const n=Math.max(18,Math.round(TAU*r/h));const off=rnd()*TAU/n;return Array.from({length:n},(_,i)=>[r,off+i*TAU/n]);});
+const meshPath=new Path2D(), nodes=[];
+rings.forEach(rg=>rg.forEach(([r,a])=>nodes.push(pol(r,a))));
+for(let i=0;i<rings.length;i++){const A=rings[i];A.forEach(([r,a],k)=>{const p=pol(r,a),q=pol(r,A[(k+1)%A.length][1]);meshPath.moveTo(p[0],p[1]);meshPath.lineTo(q[0],q[1]);});
+  if(i+1<rings.length){const B=rings[i+1];let j=0;A.forEach(([r,a])=>{while(j<B.length-1&&B[j+1][1]<a)j++;[B[j],B[(j+1)%B.length]].forEach(([rb,ab])=>{const p=pol(r,a),q=pol(rb,ab);meshPath.moveTo(p[0],p[1]);meshPath.lineTo(q[0],q[1]);});});}}
+
+/* housing fins */
+const finPath=new Path2D();for(let i=0;i<40;i++){const a=i*TAU/40,w=3.2;const pts=[pol(R.house-1,a-w/R.house),pol(R.fin,a-w/R.fin*.8),pol(R.fin,a+w/R.fin*.8),pol(R.house-1,a+w/R.house)];finPath.moveTo(...pts[0]);pts.slice(1).forEach(p=>finPath.lineTo(...p));finPath.closePath();}
+
+/* Pareto designs (illustrative) */
+const designs=[];for(let k=0;k<150;k++){const u=rnd();const T=9+14*Math.pow(u,.8);const base=3+30*Math.pow((T-9)/14,2.2);const rip=Math.min(48,base+Math.pow(rnd(),1.6)*26);designs.push({T,rip});}
+const front=[...designs].sort((a,b)=>b.T-a.T);let best=1e9;front.forEach(d=>{if(d.rip<best){d.front=true;best=d.rip;}});
+const frontPts=designs.filter(d=>d.front).sort((a,b)=>a.rip-b.rip);
+const chosen=frontPts[Math.floor(frontPts.length*.45)];
+const nodeIdx=designs.map(()=>Math.floor(rnd()*nodes.length));
+
+/* ---------- camera keys ---------- */
+// target world point, zoom (relative), screen anchor desktop / mobile, scene params
+const K=[
+ {x:0,y:0,z:1.0,  sx:.66,sy:.52, flux:0,  loops:0, mesh:0,chart:0,rot:.0},
+ {x:0,y:-141,z:5.2,sx:.36,sy:.5, flux:0,  loops:0, mesh:0,chart:0,rot:.0},
+ {...{x:pol(119.6,TOP+Math.PI/24)[0],y:pol(119.6,TOP+Math.PI/24)[1]},z:15,sx:.66,sy:.5,flux:.85,loops:1,mesh:0,chart:0,rot:.0},
+ {x:0,y:0,z:1.05, sx:.36,sy:.52, flux:1,  loops:1, mesh:0,chart:0,rot:0},
+ {x:0,y:0,z:.92,  sx:.7, sy:.52, flux:.45,loops:0, mesh:1,chart:1,rot:0},
+ {x:0,y:0,z:.62,  sx:.5, sy:.36, flux:.7, loops:.55,mesh:0,chart:0,rot:0}
+];
+const MK=[{sy:.3,z:.82},{sy:.3,z:4.4},{sy:.3,z:12},{sy:.3,z:.86},{sy:.27,z:.78},{sy:.24,z:.6}];
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const sm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+let W=0,H=0,DPR=1,mobile=false;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;mobile=W<760;
+  track.style.height=(N*1.6*100)+"vh";}
+addEventListener("resize",resize);resize();
+
+function keyFor(i){const k={...K[i]};if(mobile){k.sx=.5;k.sy=MK[i].sy;k.z=MK[i].z;}return k;}
+function chapterH(){return (track.offsetHeight-innerHeight)/(N-1+0.45);}
+function progress(){return Math.max(0,Math.min(N-1+0.45,scrollY/chapterH()));}
+function jump(i){scrollTo({top:(i+(i?0.08:0))*chapterH(),behavior:reduce?"auto":"smooth"});}
+
+function camAt(p){const i=Math.min(N-1,Math.floor(p)),t=p-i;const a=keyFor(i);
+  if(i===N-1||t<TR){const d=Math.min(t,TR)/TR;return {...a,z:a.z*(1+0.05*d),u:0,i,t};}
+  const b=keyFor(i+1),u=ease((t-TR)/(1-TR));const o={u,i,t};
+  for(const k in a){o[k]=k==="z"?Math.exp(lerp(Math.log(a.z),Math.log(b.z),u)):lerp(a[k],b[k],u);}
+  // connecting shot: a small arc in the camera path
+  o.rot=Math.sin(Math.PI*u)*0.18*(i%2?-1:1);o.z*=1+Math.sin(Math.PI*u)*0.12;
+  return o;}
+
+/* ---------- animation state ---------- */
+let rotA=0,fieldA=0,innerA=0,last=performance.now();
+function modeMix(cam){ // 0 synchronous, 1 vernier (chapter 4 second half)
+  if(cam.i===3) return sm(.35,.5,cam.t);
+  if(cam.i===2&&cam.u>0) return 0; return cam.i>=4?1:0;}
+
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  const p=progress(),cam=camAt(p);
+  const vm=modeMix(cam);
+  const speedBase=[.18,.06,.05,0,.03,.12][cam.i];
+  let rs,fs;
+  if(cam.i===3){rs=lerp(1.1,.12,vm);fs=lerp(1.1,.12*5,vm);}else{rs=speedBase;fs=speedBase;}
+  if(reduce){rs*=.15;fs*=.15;}
+  rotA+=rs*dt;fieldA+=fs*dt;innerA+=fs*.8*dt;
+  draw(cam,vm,now/1000);
+  ui(p,cam);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- drawing ---------- */
+function draw(c,vm,time){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle="#12181c";ctx.fillRect(0,0,W,H);
+  const S=Math.min(W,H)/480*c.z;
+  const ox=W*c.sx, oy=H*c.sy;
+  // faint drafting grid in screen space
+  ctx.save();ctx.strokeStyle="rgba(93,107,115,.10)";ctx.lineWidth=1;const g=48;ctx.beginPath();
+  for(let x=(ox%g);x<W;x+=g){ctx.moveTo(x,0);ctx.lineTo(x,H);}for(let y=(oy%g);y<H;y+=g){ctx.moveTo(0,y);ctx.lineTo(W,y);}ctx.stroke();ctx.restore();
+
+  const machineAlpha=1-0.78*c.chartOn;
+  ctx.save();
+  ctx.translate(ox,oy);ctx.rotate(c.rot);ctx.scale(S,S);ctx.translate(-c.x,-c.y);
+  ctx.globalAlpha=machineAlpha;
+  const px=1/S; // one screen pixel in world units
+  const P=lerp(2,10,vm); // field pole pairs for colouring
+  const Bat=(a,r)=>{const s=0.5+0.5*Math.cos(2*(a-fieldA));const v=0.5+0.5*Math.cos(10*(a-fieldA*1.0));return .18+.8*lerp(s,v,vm)*(r>150?.75:1);};
+
+  // housing + fins
+  ctx.fillStyle="#252e34";ctx.fill(finPath);
+  sector(R.osOut,R.house,0,TAU);ctx.fillStyle="#2b353b";ctx.fill();
+  ctx.strokeStyle="rgba(140,155,160,.35)";ctx.lineWidth=1.2*px;ctx.beginPath();ctx.arc(0,0,R.house,0,TAU);ctx.stroke();
+  for(let i=0;i<8;i++){const [bx,by]=pol(181,i*TAU/8+TAU/16);ctx.beginPath();ctx.arc(bx,by,3.2,0,TAU);ctx.fillStyle="#12181c";ctx.fill();ctx.stroke();}
+
+  // outer stator iron, coloured by flux density
+  for(let i=0;i<NS;i++){const a1=TOP+(i-.5)*TAU/NS,a2=a1+TAU/NS,am=(a1+a2)/2;sector(R.osIn,R.osOut,a1-0.002,a2+0.002);ctx.fillStyle=ironCol(Bat(am,140),c.flux);ctx.fill();}
+  // outer stator slots (slot 0 centred at top)
+  for(let i=0;i<NS;i++){drawSlot(TOP+i*TAU/NS,i,px);}
+  ctx.strokeStyle="rgba(170,180,182,.45)";ctx.lineWidth=1*px;ctx.beginPath();ctx.arc(0,0,R.osOut,0,TAU);ctx.stroke();
+
+  // rotor (rotating)
+  ctx.save();ctx.rotate(rotA);
+  for(let i=0;i<NR;i++){const a1=i*TAU/NR,a2=a1+TAU/NR,am=(a1+a2)/2;sector(R.rotIn,R.rotOut,a1-0.002,a2+0.002);ctx.fillStyle=ironCol(Bat(am+rotA,100),c.flux*.9);ctx.fill();}
+  for(let i=0;i<NPM;i++){const a=i*TAU/NPM,h=.78*TAU/NPM/2;sector(R.pmIn,R.rotOut-.4,a-h,a+h);ctx.fillStyle=i%2?"#3f6280":"#a4483a";ctx.fill();
+    if(S>3){ctx.fillStyle="rgba(233,228,218,.85)";ctx.font=(4.2)+"px IBM Plex Mono, monospace";ctx.textAlign="center";ctx.textBaseline="middle";const [tx,ty]=pol((R.pmIn+R.rotOut)/2,a);ctx.save();ctx.translate(tx,ty);ctx.rotate(a+Math.PI/2);ctx.fillText(i%2?"S":"N",0,0);ctx.restore();}}
+  for(let i=0;i<NFS;i++){const a=(i+.5)*TAU/NFS,h=.16;sector(86,105,a-h*.55,a+h*.55);ctx.fillStyle="#141b1f";ctx.fill();
+    for(let rr=89;rr<104;rr+=3.6)for(let s=-1;s<=1;s+=1){const [cx,cy]=pol(rr,a+s*0.045);ctx.beginPath();ctx.arc(cx,cy,1.25,0,TAU);ctx.fillStyle=i%2?"#b8a06a":"#d0864a";ctx.fill();}}
+  ctx.restore();
+
+  // inner stator
+  for(let i=0;i<NIS*2;i++){const a1=i*TAU/(NIS*2),a2=a1+TAU/(NIS*2);sector(R.isIn,R.isOut,a1-0.002,a2+0.002);ctx.fillStyle=ironCol(Bat((a1+a2)/2,60)*.9,c.flux*.85);ctx.fill();}
+  for(let i=0;i<NIS;i++){const a=i*TAU/NIS,hb=4/R.isSlotIn,ht=6.5/73;poly([pol(R.isSlotIn,a-hb),pol(73,a-ht),pol(75,a-1.2/75),pol(R.isOut+.2,a-1.2/77),pol(R.isOut+.2,a+1.2/77),pol(75,a+1.2/75),pol(73,a+ht),pol(R.isSlotIn,a+hb)]);ctx.fillStyle="#141b1f";ctx.fill();
+    for(let rr=53;rr<72;rr+=3.4){const n=rr>62?3:2;for(let s=0;s<n;s++){const off=(s-(n-1)/2)*0.05;const [cx,cy]=pol(rr,a+off);ctx.beginPath();ctx.arc(cx,cy,1.2,0,TAU);ctx.fillStyle=PHASE[(i)%3];ctx.fill();}}}
+  // shaft
+  ctx.beginPath();ctx.arc(0,0,R.isIn,0,TAU);ctx.fillStyle="#161d21";ctx.fill();
+  ctx.beginPath();ctx.arc(0,0,R.shaft,0,TAU);ctx.fillStyle="#2c363c";ctx.fill();ctx.strokeStyle="rgba(170,180,182,.4)";ctx.lineWidth=1*px;ctx.stroke();
+  ctx.save();ctx.beginPath();ctx.arc(0,0,R.shaft,0,TAU);ctx.clip();ctx.strokeStyle="rgba(170,180,182,.18)";for(let k=-30;k<30;k+=4){ctx.beginPath();ctx.moveTo(k-30,-30);ctx.lineTo(k+30,30);ctx.stroke();}ctx.restore();
+  ctx.strokeStyle="rgba(208,134,74,.55)";ctx.setLineDash([6*px,4*px]);ctx.beginPath();ctx.moveTo(-34,0);ctx.lineTo(34,0);ctx.moveTo(0,-34);ctx.lineTo(0,34);ctx.stroke();ctx.setLineDash([]);
+
+  // flux loops
+  if(c.loops>0.01) drawLoops(c.loops,vm,time,px);
+
+  // FEA mesh
+  const meshOn=c.mesh*(c.i===4?sm(0,.28,c.t):1)*(1-sm(.55,.8,c.i===4?c.t:0));
+  if(meshOn>0.01){ctx.globalAlpha=machineAlpha*meshOn*.55;ctx.strokeStyle="#cfe3dc";ctx.lineWidth=.7*px;ctx.stroke(meshPath);ctx.globalAlpha=machineAlpha;}
+  ctx.restore();
+
+  // screen-space annotations
+  const toScreen=(wx,wy)=>{let x=(wx-c.x)*S,y=(wy-c.y)*S;const cr=Math.cos(c.rot),sr=Math.sin(c.rot);return [ox+x*cr-y*sr,oy+x*sr+y*cr];};
+  annotations(c,toScreen,S);
+  if(c.chartOn>0.01) drawChart(c,toScreen);
+}
+
+function drawSlot(a,i,px){
+  const hb=4.6/R.slotBot, ht=6.6/R.slotTop;
+  const so=1.6/R.osIn;
+  poly([pol(R.osIn-.2,a-so),pol(R.slotBot-1.5,a-so),pol(R.slotBot,a-hb),pol(R.slotTop,a-ht),pol(R.slotTop,a+ht),pol(R.slotBot,a+hb),pol(R.slotBot-1.5,a+so),pol(R.osIn-.2,a+so)]);
+  ctx.fillStyle="#141b1f";ctx.fill();
+  // liner
+  poly([pol(R.slotBot+.6,a-hb+.4/R.slotBot),pol(R.slotTop-.6,a-ht+.5/R.slotTop),pol(R.slotTop-.6,a+ht-.5/R.slotTop),pol(R.slotBot+.6,a+hb-.4/R.slotBot)]);
+  ctx.strokeStyle="rgba(214,205,170,.55)";ctx.lineWidth=Math.max(.35,1*px);ctx.stroke();
+  // wedge
+  poly([pol(R.slotBot-1.2,a-hb*.95),pol(R.slotBot+1.4,a-hb*.98),pol(R.slotBot+1.4,a+hb*.98),pol(R.slotBot-1.2,a+hb*.95)]);ctx.fillStyle="#6f6a55";ctx.fill();
+  // two coil layers
+  const lower=PHASE[Math.floor(i/2)%3], upper=PHASE[Math.floor((i+3)/2)%3];
+  for(let rr=127;rr<158.5;rr+=2.9){const lay=rr<142.5?lower:upper;const w=lerp(3.4,5.4,(rr-124)/36);const n=Math.max(2,Math.floor(w/1.45));for(let s=0;s<n;s++){const off=((s-(n-1)/2)*2.75)/rr;const [cx,cy]=pol(rr,a+off);ctx.beginPath();ctx.arc(cx,cy,1.15,0,TAU);ctx.fillStyle=lay;ctx.fill();}}
+  // layer separator
+  ctx.beginPath();const [s1x,s1y]=pol(142.4,a-5.4/142),[s2x,s2y]=pol(142.4,a+5.4/142);ctx.moveTo(s1x,s1y);ctx.lineTo(s2x,s2y);ctx.strokeStyle="rgba(214,205,170,.5)";ctx.stroke();
+}
+
+function loopPath(rin,rout,a1,a2,n){
+  const ac=(a1+a2)/2,ha=(a2-a1)/2,rc=(rin+rout)/2,hr=(rout-rin)/2;ctx.beginPath();
+  for(let k=0;k<=72;k++){const th=k/72*TAU,c=Math.cos(th),s=Math.sin(th);const a=ac+ha*Math.sign(c)*Math.pow(Math.abs(c),2/n),r=rc+hr*Math.sign(s)*Math.pow(Math.abs(s),2/n);const [x,y]=pol(r,a);k?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.closePath();}
+function drawLoops(vis,vm,time,px){
+  ctx.lineCap="round";ctx.lineWidth=Math.max(.25,1.3*px);
+  ctx.setLineDash([7*px,9*px]);ctx.lineDashOffset=-time*28*px*(reduce?0:1);
+  [[0,1-vm],[1,vm]].forEach(([mode,w])=>{if(w<.02)return;const P=mode?10:2;const span=Math.PI/P;
+    for(let j=0;j<2*P;j++){const a0=fieldA+j*span;
+      for(let k=1;k<=4;k++){const e=span*(.06+.085*k);
+        ctx.strokeStyle="rgba(240,196,120,"+(.55*vis*w*(1.05-k*.12))+")";
+        loopPath(mode?104-k*1.6:96-k*4,mode?126+k*7:150+k*5,a0+e,a0+span-e,mode?3:4);ctx.stroke();
+        if(!mode){ctx.strokeStyle="rgba(140,210,200,"+(.4*vis*w*(1.05-k*.12))+")";loopPath(48+k*3,98-k*2,a0+e+.05,a0+span-e-.05,4);ctx.stroke();}
+      }}});
+  ctx.setLineDash([]);}
+
+function label(x,y,dx,dy,text,alpha,align){
+  if(alpha<.02)return;ctx.save();ctx.globalAlpha=alpha;text=text.toUpperCase();
+  ctx.font="500 10.5px IBM Plex Mono, monospace";const tw=ctx.measureText(text).width;
+  let right=align==="right";if(!right&&x+dx+24+tw>W-48){right=true;dx=-Math.abs(dx);}else if(right&&x-Math.abs(dx)-24-tw<8){right=false;dx=Math.abs(dx);}
+  if(right)dx=-Math.abs(dx);
+  if(x<-20||x>W+20||y<-20||y>H+20){ctx.restore();return;}
+  ctx.strokeStyle="rgba(208,134,74,.9)";ctx.fillStyle="#d0864a";ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(x,y,2.6,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+dx,y+dy);ctx.lineTo(x+dx+(right?-18:18),y+dy);ctx.stroke();
+  ctx.fillStyle="#e9e4da";ctx.textBaseline="middle";ctx.textAlign=right?"right":"left";
+  let tx=x+dx+(right?-24:24);if(right)tx=Math.max(8+tw,tx);else tx=Math.min(W-48-tw,tx);
+  ctx.fillText(text,tx,y+dy);ctx.restore();}
+
+function annotations(c,ts,S){
+  const vis=i=>c.i===i?(i===0?1:sm(.06,.16,c.t))*(1-sm(.6,.72,c.t)):0;
+  const L=mobile?.0:1;
+  let v=vis(0);if(v){const f=mobile?-1:1;
+    label(...ts(...pol(186,TOP-0.9)),-60*f,-30,"Housing · 40 fins",v,f>0?"right":"left");
+    label(...ts(...pol(150,TOP-2.2)),-70,10,"Outer stator · 24 slots",v,"right");
+    label(...ts(...pol(100,TOP+2.6)),-70,40,"Hybrid rotor",v,"right");
+    label(...ts(...pol(62,TOP+1.9)),-80,70,"Inner stator · 12 slots",v,"right");}
+  v=vis(1);if(v){const a=TOP;
+    label(...ts(...pol(122.5,a)),70,40,"Slot wedge",v);
+    label(...ts(...pol(132,a+2/132)),90,10,"Lower coil layer",v);
+    label(...ts(...pol(152,a-2/152)),90,-40,"Upper coil layer",v);
+    label(...ts(...pol(165,a+0.18)),60,-30,"Back-iron (yoke)",v);
+    label(...ts(...pol(140,a+TAU/48)),60,60,"Stator tooth",v);}
+  v=vis(2);if(v){const a=TOP+Math.PI/24;const [x1,y1]=ts(...pol(R.rotOut,a)),[x2,y2]=ts(...pol(R.osIn,a));
+    ctx.save();ctx.globalAlpha=v;ctx.strokeStyle="#e9e4da";ctx.lineWidth=1;const dx=mobile?60:-90;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1+dx,y1);ctx.moveTo(x2,y2);ctx.lineTo(x2+dx,y2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x1+dx*.8,y1);ctx.lineTo(x2+dx*.8,y2);ctx.stroke();
+    [[x1+dx*.8,y1,1],[x2+dx*.8,y2,-1]].forEach(([x,y,s])=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-4,y+7*s);ctx.lineTo(x+4,y+7*s);ctx.closePath();ctx.fillStyle="#e9e4da";ctx.fill();});
+    ctx.font="500 11px IBM Plex Mono, monospace";ctx.textAlign=mobile?"left":"right";ctx.textBaseline="middle";ctx.fillText("AIRGAP 0.5 MM",x1+dx*.8+(mobile?10:-10),(y1+y2)/2);ctx.restore();
+    label(...ts(...pol(126,a+0.03)),50,-50,"Flux path",v);
+    label(...ts(...pol(114.5,a-0.02)),70,50,"Rotor magnet",v);}
+  v=vis(3);if(v){const [x,y]=ts(0,R.fin+8);const vm=modeMix(c);
+    ctx.save();ctx.globalAlpha=v;ctx.textAlign="center";ctx.textBaseline="top";ctx.font="500 11px IBM Plex Mono, monospace";
+    const items=[["SYNCHRONOUS · HIGH SPEED",1-vm],["VERNIER · LOW SPEED, HIGH TORQUE",vm]];
+    items.forEach(([t,w],k)=>{ctx.fillStyle=w>.5?"#d0864a":"rgba(154,165,168,.7)";ctx.fillText((w>.5?"● ":"○ ")+t,x,y+k*18);});ctx.restore();}
+}
+
+function chartRect(){return mobile?{x:W*.12,y:H*.09,w:W*.78,h:H*.36}:{x:W*.5,y:H*.2,w:Math.min(W*.4,560),h:H*.58};}
+function drawChart(c,ts){
+  const r=chartRect(),m=c.chartOn;
+  const X=v=>r.x+v/50*r.w,Y=v=>r.y+r.h-(v-8)/16*r.h;
+  ctx.save();ctx.globalAlpha=sm(.35,1,m);
+  ctx.strokeStyle="rgba(154,165,168,.55)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x,r.y+r.h);ctx.lineTo(r.x+r.w,r.y+r.h);ctx.stroke();
+  ctx.font="10px IBM Plex Mono, monospace";ctx.fillStyle="#9aa5a8";ctx.textAlign="center";ctx.textBaseline="top";
+  [0,10,20,30,40,50].forEach(t=>{ctx.fillText(t,X(t),r.y+r.h+8);ctx.beginPath();ctx.moveTo(X(t),r.y+r.h);ctx.lineTo(X(t),r.y+r.h+4);ctx.stroke();});
+  ctx.textAlign="right";ctx.textBaseline="middle";[8,12,16,20,24].forEach(t=>{ctx.fillText(t,r.x-8,Y(t));ctx.beginPath();ctx.moveTo(r.x-4,Y(t));ctx.lineTo(r.x,Y(t));ctx.stroke();});
+  ctx.textAlign="left";ctx.textBaseline="bottom";ctx.fillStyle="#e9e4da";ctx.fillText("AVERAGE TORQUE (N·m) ↑",r.x,r.y-10);
+  ctx.textAlign="right";ctx.textBaseline="top";ctx.fillText("TORQUE RIPPLE (%) →",r.x+r.w,r.y+r.h+26);
+  ctx.textAlign="left";ctx.fillStyle="#9aa5a8";ctx.fillText("Illustrative design sweep · one point per FEA-evaluated geometry",r.x,r.y+r.h+(mobile?44:46));
+  ctx.restore();
+  // points fly from mesh nodes to chart
+  designs.forEach((d,k)=>{const n=nodes[nodeIdx[k]];const [sx,sy]=ts(n[0],n[1]);const tk=Math.max(0,Math.min(1,m*1.5-(k/designs.length)*.5));const e=ease(tk);
+    const x=lerp(sx,X(d.rip),e),y=lerp(sy,Y(d.T),e);ctx.beginPath();ctx.arc(x,y,d.front?3.2:2.2,0,TAU);
+    ctx.fillStyle=d.front?"rgba(208,134,74,"+(.4+.6*e)+")":"rgba(207,227,220,"+(.25+.35*e)+")";ctx.fill();});
+  const fa=sm(.75,1,m);if(fa>0){ctx.save();ctx.globalAlpha=fa;ctx.strokeStyle="#d0864a";ctx.lineWidth=1.5;ctx.beginPath();frontPts.forEach((d,k)=>k?ctx.lineTo(X(d.rip),Y(d.T)):ctx.moveTo(X(d.rip),Y(d.T)));ctx.stroke();
+    const cx=X(chosen.rip),cy=Y(chosen.T);ctx.beginPath();ctx.arc(cx,cy,9,0,TAU);ctx.stroke();
+    ctx.font="500 10.5px IBM Plex Mono, monospace";ctx.fillStyle="#e9e4da";ctx.textAlign="left";ctx.textBaseline="middle";ctx.fillText("PARETO FRONT · CHOSEN DESIGN",cx+16,cy-14);ctx.restore();}
+}
+
+/* ---------- UI sync ---------- */
+let lastActive=-1;
+function ui(p,cam){
+  chapters.forEach((el,i)=>{const t=p-i;let o;
+    if(i===0)o=1-sm(.6,.72,t);
+    else if(i===N-1)o=sm(.04,.16,t);
+    else o=sm(.04,.16,t)*(1-sm(.6,.72,t));
+    el.style.opacity=o.toFixed(3);el.style.visibility=o<.01?"hidden":"visible";
+    const shift=((1-o)*14).toFixed(1)+"px";
+    el.style.translate=mobile?("0 "+shift):(el.classList.contains("bottom")?"0 "+shift:"0 "+shift);});
+  const a=Math.min(N-1,Math.floor(p+(p%1>.86?1:0)));
+  if(a!==lastActive){lastActive=a;navBtns.forEach((b,i)=>b.toggleAttribute("aria-current",false));navBtns[a].setAttribute("aria-current","step");document.getElementById("chapLabel").textContent=labelsTxt[a];}
+  document.getElementById("hint").style.opacity=(1-sm(.05,.25,p)).toFixed(2);
+  document.getElementById("progress").style.width=(p/(N-1+0.45)*100).toFixed(2)+"%";
+}
+
+/* chart visibility + key-driven extra */
+const _camAt=camAt;
+camAt=function(p){const c=_camAt(p);c.chartOn=(c.i===4?sm(.3,.62,c.t):0)*(c.i===4&&c.u>0?1-c.u:1);if(c.i===3&&c.u>0)c.chartOn=0;return c;};
+
+requestAnimationFrame(frame);
+addEventListener("keydown",e=>{if(e.target!==document.body)return;const p=progress();if(e.key==="ArrowDown"||e.key==="PageDown"){e.preventDefault();jump(Math.min(N-1,Math.floor(p+.3)+1));}if(e.key==="ArrowUp"||e.key==="PageUp"){e.preventDefault();jump(Math.max(0,Math.ceil(p-.3)-1));}});
+})();
+</script>
+</body>
+</html>

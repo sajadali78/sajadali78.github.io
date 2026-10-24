@@ -1,31 +1,18 @@
 ---
-layout: compress
 ---
-
 {% include base_path %}
-
 <!doctype html>
-<html lang="{{ site.locale | slice: 0,2 }}" class="no-js"{% if site.site_theme == "dark" %} data-theme="dark"{% endif %}>
-  <head>
-    {% include head.html %}
-    {% include head/custom.html %}
-  </head>
-
-  <body>
-
-    {% include browser-upgrade.html %}
-    {% include masthead.html %}
-
-    {{ content }}
-
-    <div class="page__footer">
-      <footer>
-        {% include footer/custom.html %}
-        {% include footer.html %}
-      </footer>
-    </div>
-
-    {% include scripts.html %}
-
-  </body>
+<html lang="en">
+<head>
+{% include steel-head.html %}
+<link rel="stylesheet" href="{{ base_path }}/assets/css/steel.css">
+{% include analytics.html %}
+</head>
+<body>
+<a class="sr-only" href="#main">Skip to content</a>
+{% include steel-header.html %}
+{{ content }}
+{% include steel-footer.html %}
+<script src="{{ base_path }}/assets/js/steel.js" defer></script>
+</body>
 </html>

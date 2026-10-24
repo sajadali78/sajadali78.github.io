@@ -1,0 +1,15 @@
+{% assign coll_url = "/" | append: page.collection | append: "/" %}
+{% assign sec_num = "" %}{% assign sec_name = include.label | default: page.collection | default: "Page" %}
+{% for link in site.data.navigation.main %}
+  {% if page.url == link.url or coll_url == link.url %}{% assign sec_num = forloop.index | prepend: "0" | slice: -2, 2 %}{% assign sec_name = link.title %}{% endif %}
+{% endfor %}
+<header class="hero">
+  <canvas class="hero__machine" data-seed="{{ page.title | size }}" aria-hidden="true"></canvas>
+  <div class="hero__in">
+    <div class="eyebrow">{% if sec_num != "" %}<span class="seal">{{ sec_num }}</span>{% endif %}{{ sec_name }}</div>
+    <h1{% if page.title.size > 42 %} class="hero__long"{% endif %}>{{ page.title | markdownify | remove: "<p>" | remove: "</p>" | strip }}</h1>
+    {% if include.lede %}<p class="lede">{{ include.lede | markdownify | remove: "<p>" | remove: "</p>" | strip }}</p>{% endif %}
+    {% if include.facts %}<ul class="facts">{{ include.facts }}</ul>{% endif %}
+    {% if include.actions %}<div class="actions">{{ include.actions }}</div>{% endif %}
+  </div>
+</header>

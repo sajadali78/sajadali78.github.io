@@ -248,7 +248,7 @@ addEventListener("resize",resize);resize();
 function keyFor(i){const k={...K[i]};if(mobile){k.sx=.5;k.sy=MK[i].sy;k.z=MK[i].z;}return k;}
 function chapterH(){return (track.offsetHeight-innerHeight)/(N-1+0.45);}
 function progress(){return Math.max(0,Math.min(N-1+0.45,scrollY/chapterH()));}
-function jump(i){scrollTo({top:(i+(i?0.08:0))*chapterH(),behavior:reduce?"auto":"smooth"});}
+function jump(i){scrollTo({top:(i+(i?0.2:0))*chapterH(),behavior:reduce?"auto":"smooth"});}
 
 function camAt(p){const i=Math.min(N-1,Math.floor(p)),t=p-i;const a=keyFor(i);
   if(i===N-1||t<TR){const d=Math.min(t,TR)/TR;return {...a,z:a.z*(1+0.05*d),u:0,i,t};}

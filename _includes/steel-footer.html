@@ -1,0 +1,19 @@
+{% include base_path %}
+<footer class="site-foot">
+  <div class="site-foot__in">
+    <div>
+      <h2>Looking for the next machine.</h2>
+      <p>Open to PhD positions in electrical machine design with FEA and machine learning in the optimization loop.</p>
+      <div class="email">{{ site.author.email }}</div>
+    </div>
+    <ul>
+      <li><a href="{{ base_path }}/cv/">CV</a></li>
+      {% if site.author.googlescholar %}<li><a href="{{ site.author.googlescholar }}" rel="noopener">Google Scholar</a></li>{% endif %}
+      {% if site.author.linkedin %}<li><a href="https://www.linkedin.com/in/{{ site.author.linkedin }}" rel="noopener">LinkedIn</a></li>{% endif %}
+      {% if site.author.orcid %}<li><a href="{{ site.author.orcid }}" rel="noopener">ORCID</a></li>{% endif %}
+      {% if site.author.researchgate %}<li><a href="{{ site.author.researchgate }}" rel="noopener">ResearchGate</a></li>{% endif %}
+      {% if site.author.github %}<li><a href="https://github.com/{{ site.author.github }}" rel="noopener">GitHub</a></li>{% endif %}
+    </ul>
+    <small>© {{ site.time | date: '%Y' }} {{ site.author.name }} · {{ site.author.location }}</small>
+  </div>
+</footer>

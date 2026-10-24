@@ -1,0 +1,19 @@
+{% include base_path %}
+<nav class="sitenav" aria-label="Main">
+  <ul>
+    {% for link in site.data.navigation.main %}
+      {% assign coll_url = "/" | append: page.collection | append: "/" %}
+      <li><a href="{{ base_path }}{{ link.url }}"{% if page.url == link.url or coll_url == link.url %} aria-current="page"{% endif %}>{{ link.title }}</a></li>
+    {% endfor %}
+  </ul>
+  <details>
+    <summary>Menu</summary>
+    <ul>
+      <li><a href="{{ base_path }}/">Tour</a></li>
+      {% for link in site.data.navigation.main %}
+        {% assign coll_url = "/" | append: page.collection | append: "/" %}
+        <li><a href="{{ base_path }}{{ link.url }}"{% if page.url == link.url or coll_url == link.url %} aria-current="page"{% endif %}>{{ link.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </details>
+</nav>

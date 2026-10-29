@@ -25,6 +25,9 @@ main:
     
   - title: "Scripts"
     url: /scripts/
+
+  - title: "EM Design Suite"
+    url: /em-design-suite/
     
   - title: "CV"
     url: /cv/

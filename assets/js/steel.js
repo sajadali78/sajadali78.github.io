@@ -224,3 +224,105 @@
 
   for (var i = 0; i < canvases.length; i++) new Machine(canvases[i]);
 })();
+
+/* "On this page" index in the side rail, and copy-citation buttons.
+   The index lists the reading column's top-level headings (numbered like their
+   copper seals) and marks the one being read; it stays hidden when a page has
+   fewer than three. */
+(function () {
+  "use strict";
+  var toc = document.querySelector("[data-toc]"), prose = document.querySelector(".sheet .prose");
+  if (toc && prose) {
+    var heads = [].slice.call(prose.querySelectorAll(":scope > h1, :scope > h2"));
+    var numbered = !prose.classList.contains("prose--own-numbers");
+    if (heads.length >= 3) {
+      var list = toc.querySelector("ol"), links = [];
+      heads.forEach(function (h, i) {
+        if (!h.id) h.id = "sec-" + (i + 1);
+        var a = document.createElement("a");
+        a.href = "#" + h.id;
+        if (numbered) {
+          var b = document.createElement("b");
+          b.textContent = (i < 9 ? "0" : "") + (i + 1);
+          a.appendChild(b);
+        }
+        a.appendChild(document.createTextNode(h.textContent.trim()));
+        var li = document.createElement("li");
+        li.appendChild(a); list.appendChild(li); links.push(a);
+      });
+      toc.hidden = false;
+      var current = -1, queued = false;
+      var mark = function () {
+        queued = false;
+        var line = window.innerHeight * 0.3, k = 0;
+        for (var i = 0; i < heads.length; i++) if (heads[i].getBoundingClientRect().top <= line) k = i;
+        if (k === current) return;
+        if (current >= 0) links[current].removeAttribute("aria-current");
+        links[k].setAttribute("aria-current", "true");
+        current = k;
+      };
+      window.addEventListener("scroll", function () { if (!queued) { queued = true; requestAnimationFrame(mark); } }, { passive: true });
+      mark();
+    }
+  }
+
+  if (!(navigator.clipboard && window.isSecureContext)) return;
+  [].forEach.call(document.querySelectorAll("button.copy[data-copy]"), function (btn) {
+    var label = btn.textContent, timer = 0;
+    btn.hidden = false;
+    btn.addEventListener("click", function () {
+      navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(function () {
+        btn.textContent = "Copied"; btn.setAttribute("data-done", "");
+        clearTimeout(timer);
+        timer = setTimeout(function () { btn.textContent = label; btn.removeAttribute("data-done"); }, 1800);
+      });
+    });
+  });
+})();
+
+/* Motion: scroll reveals and the header that steps aside while reading.
+   Everything animated here moves by transform/opacity only. */
+(function () {
+  "use strict";
+  var root = document.documentElement;
+
+  /* Reveal blocks of the reading column and rail as they enter the viewport.
+     Blocks arriving in the same observer batch are staggered 70ms apart (capped,
+     so a long list never waits); each is revealed once, then .rv-done drops the
+     reveal transition so its own hover transitions take over again. */
+  if (root.classList.contains("rv-ready")) {
+    root.classList.add("rv-live");
+    var targets = [].slice.call(document.querySelectorAll(".prose > *, .skill-badge, .rail > *, .cite-box"));
+    var io = new IntersectionObserver(function (entries) {
+      var k = 0;
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var el = e.target, d = Math.min(k++, 6) * 70;
+        io.unobserve(el);
+        el.style.setProperty("--rv-d", d + "ms");
+        el.classList.add("rv-in");
+        setTimeout(function () { el.classList.add("rv-done"); el.style.removeProperty("--rv-d"); }, 850 + d);
+      });
+    }, { rootMargin: "0px 0px -6% 0px" });
+    targets.forEach(function (el) { io.observe(el); });
+  }
+
+  /* Header: slides up out of the way while scrolling down, back as soon as the
+     reader scrolls up; a soft shadow fades in once the page has moved. It stays
+     put while focus or the mobile menu is inside it. */
+  var head = document.querySelector(".site-head");
+  if (!head) return;
+  var lastY = window.scrollY, queued = false, reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  function update() {
+    queued = false;
+    var y = Math.max(0, window.scrollY), dy = y - lastY;
+    head.classList.toggle("is-scrolled", y > 8);
+    var pinned = reduce.matches || head.contains(document.activeElement) || head.querySelector("details[open]");
+    if (y < 120 || pinned || dy < -6) head.classList.remove("is-hidden");
+    else if (dy > 6) head.classList.add("is-hidden");
+    if (Math.abs(dy) > 6) lastY = y;
+  }
+  window.addEventListener("scroll", function () { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
+  head.addEventListener("focusin", function () { head.classList.remove("is-hidden"); });
+  update();
+})();

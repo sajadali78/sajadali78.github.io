@@ -8,3 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  /* Scroll reveals: mark <html> before first paint so the blocks steel.js will
+     reveal start hidden instead of flashing. Skipped for reduced motion; undone
+     after 2.5s if steel.js has not taken over by then. */
+  (function (d) {
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    d.classList.add("rv-ready");
+    setTimeout(function () { if (!d.classList.contains("rv-live")) d.classList.remove("rv-ready"); }, 2500);
+  })(document.documentElement);
+</script>

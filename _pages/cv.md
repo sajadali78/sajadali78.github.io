@@ -2,6 +2,7 @@
 layout: archive
 title: "CV"
 permalink: /cv/
+lede: "Education, research experience, skills and publications on one page."
 author_profile: true
 redirect_from:
   - /resume

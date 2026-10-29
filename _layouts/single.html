@@ -4,11 +4,15 @@ layout: default
 {% include base_path %}
 {% capture facts %}{% if page.venue %}<li><b>{{ page.venue }}</b></li>{% endif %}{% if page.type and page.collection != "publications" %}<li>{{ page.type }}</li>{% endif %}{% if page.date and page.collection %}<li>{{ page.date | date: "%B %Y" }}</li>{% endif %}{% if page.location %}<li>{{ page.location }}</li>{% endif %}{% endcapture %}
 {% capture actions %}{% if page.paperurl %}<a class="btn btn--primary" href="{{ page.paperurl }}" rel="noopener">Read the paper</a>{% endif %}{% if page.slidesurl %}<a class="btn" href="{{ page.slidesurl }}" rel="noopener">Slides</a>{% endif %}{% if page.bibtexurl %}<a class="btn" href="{{ page.bibtexurl }}" rel="noopener">BibTeX</a>{% endif %}{% endcapture %}
-{% assign lede = nil %}{% if page.collection %}{% assign lede = page.excerpt | strip_html | strip %}{% endif %}
+{% assign lede = page.lede %}{% if page.collection %}{% assign lede = page.excerpt | strip_html | strip %}{% endif %}
 {% include steel-hero.html lede=lede facts=facts actions=actions %}
-<main id="main" class="sheet">
+<main id="main" class="sheet sheet--rail">
+  <div class="sheet__main">
   {% if page.citation %}
-  <div class="cite-box"><div class="label">Cite as</div><p>{{ page.citation }}</p></div>
+  <div class="cite-box">
+    <div class="cite-box__head"><div class="label">Cite as</div><button class="copy" type="button" data-copy="{{ page.citation | strip_html | escape }}" hidden>Copy</button></div>
+    <p>{{ page.citation }}</p>
+  </div>
   {% endif %}
   <div class="prose{% if page.collection == "thesis" %} prose--own-numbers{% endif %}">
     {{ content }}
@@ -16,4 +20,6 @@ layout: default
   {% if page.collection %}{% assign back = "/" | append: page.collection | append: "/" %}
   <a class="back" href="{{ base_path }}{{ back }}">← All {{ page.collection }}</a>
   {% endif %}
+  </div>
+  {% include steel-rail.html %}
 </main>

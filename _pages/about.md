@@ -1,5 +1,7 @@
 ---
 permalink: /about/
+lede: "Electrical machine designer working where finite element analysis meets machine learning."
+rail: profile
 title: "About"
 author_profile: true
 ---

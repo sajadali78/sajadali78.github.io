@@ -2,8 +2,11 @@
 layout: default
 ---
 {% include steel-hero.html lede=page.lede %}
-<main id="main" class="sheet">
-  <div class="prose">
-    {{ content }}
+<main id="main" class="sheet sheet--rail">
+  <div class="sheet__main">
+    <div class="prose">
+      {{ content }}
+    </div>
   </div>
+  {% include steel-rail.html %}
 </main>

@@ -1,22 +1,29 @@
 {% include base_path %}
 {% assign title = post.title | markdownify | remove: "<p>" | remove: "</p>" | strip %}
+{% assign is_pub = false %}{% if post.collection == 'publications' and post.citation %}{% assign is_pub = true %}{% endif %}
 <article class="entry{% if post.collection == 'references' %} entry--noyear{% endif %}">
   {% if post.collection != 'references' %}<div class="entry__year">{{ post.date | date: "%Y" }}</div>{% endif %}
   <div class="entry__body">
     <h2 class="entry__title"><a href="{{ base_path }}{{ post.url }}">{{ title }}</a></h2>
-    {% if post.collection == 'experience' %}
+    {% if is_pub %}
+      {% comment %} The citation repeats the title, so the list shows only its author part, with the site owner's name picked out. {% endcomment %}
+      {% assign authors = post.citation | split: " (" | first | strip | replace: site.author.name, "<b>NAME</b>" | replace: "NAME", site.author.name %}
+      <p class="entry__authors">{{ authors }}</p>
+      {% if post.venue %}<p class="entry__venue">{{ post.venue }}</p>{% endif %}
+    {% elsif post.collection == 'experience' %}
       <p class="entry__venue">{{ post.venue }}{% if post.location %} · {{ post.location }}{% endif %}</p>
     {% elsif post.venue %}
       <p class="entry__venue">{{ post.venue }}</p>
     {% endif %}
-    {% if post.excerpt %}<div class="entry__excerpt">{{ post.excerpt | markdownify }}</div>{% endif %}
-    {% if post.citation %}<p class="entry__cite">{{ post.citation }}</p>{% endif %}
-    {% if post.paperurl or post.slidesurl or post.bibtexurl %}
+    {% if post.excerpt and is_pub == false %}<div class="entry__excerpt">{{ post.excerpt | markdownify }}</div>{% endif %}
+    {% if post.paperurl or post.slidesurl or post.bibtexurl or post.email or is_pub %}
     <div class="entry__links">
       {% if post.paperurl %}<a href="{{ post.paperurl }}" rel="noopener">Paper</a>{% endif %}
       {% if post.slidesurl %}<a href="{{ post.slidesurl }}" rel="noopener">Slides</a>{% endif %}
       {% if post.bibtexurl %}<a href="{{ post.bibtexurl }}" rel="noopener">BibTeX</a>{% endif %}
-      <a href="{{ base_path }}{{ post.url }}">Details</a>
+      {% if is_pub %}<button class="copy" type="button" data-copy="{{ post.citation | strip_html | escape }}" hidden>Copy citation</button>{% endif %}
+      {% if post.email %}<a href="mailto:{{ post.email }}">{{ post.email }}</a>{% endif %}
+      {% if post.collection != 'references' %}<a href="{{ base_path }}{{ post.url }}">Details</a>{% endif %}
     </div>
     {% endif %}
   </div>

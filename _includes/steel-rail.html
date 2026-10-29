@@ -1,0 +1,44 @@
+{% include base_path %}
+{% comment %}
+  Side rail beside the reading column. page.rail picks a card ("profile" or
+  "find"); steel.js fills the "On this page" index from the page's headings
+  and leaves it hidden when there are fewer than three.
+{% endcomment %}
+<aside class="rail{% if page.rail == 'profile' %} rail--lead{% endif %}" aria-label="Sidebar">
+  {% if page.rail == "profile" %}
+  <div class="card card--profile">
+    <img class="card__photo" src="{{ base_path }}/images/{{ site.author.avatar }}" alt="Portrait of {{ site.author.name }}" width="264" height="293">
+    <div class="card__id">
+      <div class="card__name">{{ site.author.name }}</div>
+      <div class="card__role">Graduate Research Assistant, Electrical Machines Lab</div>
+    </div>
+    <dl class="card__facts">
+      <div><dt>At</dt><dd>{{ site.author.employer }}</dd></div>
+      <div><dt>Based in</dt><dd>{{ site.author.location }}</dd></div>
+      <div><dt>Focus</dt><dd>Synchronous machines · FEA · ML surrogates</dd></div>
+    </dl>
+    <div class="card__actions">
+      <a class="btn btn--primary" href="{{ base_path }}/cv/">View CV</a>
+      <a class="btn" href="mailto:{{ site.author.email }}">Email</a>
+    </div>
+  </div>
+  {% endif %}
+  {% if page.rail == "profile" or page.rail == "find" %}
+  <div class="card card--links">
+    <div class="label">{% if page.rail == "find" %}Also indexed on{% else %}Elsewhere{% endif %}</div>
+    <ul>
+      {% if site.author.googlescholar %}<li><a href="{{ site.author.googlescholar }}" rel="noopener">Google Scholar</a></li>{% endif %}
+      {% if site.author.orcid %}<li><a href="{{ site.author.orcid }}" rel="noopener">ORCID</a></li>{% endif %}
+      {% if site.author.researchgate %}<li><a href="{{ site.author.researchgate }}" rel="noopener">ResearchGate</a></li>{% endif %}
+      {% if page.rail == "profile" %}
+      {% if site.author.linkedin %}<li><a href="https://www.linkedin.com/in/{{ site.author.linkedin }}" rel="noopener">LinkedIn</a></li>{% endif %}
+      {% if site.author.github %}<li><a href="https://github.com/{{ site.author.github }}" rel="noopener">GitHub</a></li>{% endif %}
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+  <nav class="toc" data-toc hidden aria-labelledby="toc-label">
+    <div class="label" id="toc-label">On this page</div>
+    <ol></ol>
+  </nav>
+</aside>

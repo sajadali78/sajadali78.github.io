@@ -2,6 +2,7 @@
 layout: archive
 title: "Scripts and Workflows"
 permalink: /scripts/
+lede: "Parametric FEA models, automation scripts and post-processing workflows from my machine-design work."
 author_profile: true
 ---
 

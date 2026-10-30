@@ -1,0 +1,93 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --steel-0: #12181c;
+    --steel-1: #1b2328;
+    --steel-2: #36424a;
+    --line: #5d6b73;
+    --copper: #d0864a;
+    --text: #e9e4da;
+    --muted: #9aa5a8;
+    --font-display: "Fraunces", Georgia, serif;
+    --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--steel-0);
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  .font-mono, code, pre {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Subtle custom scrollbars for academic drawers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #12181c;
+}
+::-webkit-scrollbar-thumb {
+  background: #36424a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d0864a;
+}
+
+/* Subtle entrance animations for 3D part telemetry spec badge */
+@keyframes badgeSlideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes badgeSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-badge-slide-in,
+.animate-badge-slide-in-left {
+  animation: badgeSlideInLeft 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-badge-slide-in-right {
+  animation: badgeSlideInRight 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-badge-slide-in,
+  .animate-badge-slide-in-left,
+  .animate-badge-slide-in-right {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+

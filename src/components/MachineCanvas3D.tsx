@@ -845,12 +845,16 @@ export const MachineCanvas3D: React.FC<Machine3DProps> = (props) => {
     // 6. Paced Animation Loop (60fps on GPU, fenced afterDraw on software WebGL)
     let frameId = 0;
     let isUnmounted = false;
-    const clock = new THREE.Clock();
 
-    let currentExplode = propsRef.current.explodeAmount;
-    let currentFlux = propsRef.current.fluxIntensity;
-    let rotorAngle = 0;
-    let fieldWaveAngle = 0;
+    // No autonomous animation: the machine is rendered as a static view.
+    // The rotor and magnetic field wave stay at fixed angles; the scene is
+    // only re-rendered when props change or the user orbits the camera.
+    const rotorAngle = 0;
+    const fieldWaveAngle = 0;
+    let lastRenderedKey = '';
+    let lastCamPos = camera.position.clone();
+    let lastCamTarget = controls.target.clone();
+    let forceRender = true;
 
     function afterDraw(cb: () => void) {
       const gl = renderer.getContext() as WebGL2RenderingContext;
@@ -875,7 +879,6 @@ export const MachineCanvas3D: React.FC<Machine3DProps> = (props) => {
 
     function tick() {
       if (isUnmounted) return;
-      const dt = Math.min(0.05, clock.getDelta());
       const p = propsRef.current;
 
       // Detect if target camera preset changed from chapter navigation
@@ -885,47 +888,62 @@ export const MachineCanvas3D: React.FC<Machine3DProps> = (props) => {
         cameraGoalActive = true;
       }
 
-      // Smoothly damp camera position & OrbitControls target when a preset is active
+      // Snap to the chapter camera preset instantly (no animated transition)
       if (cameraGoalActive && !userInteractingWithCamera) {
-        _targetCamPos.set(p.cameraPos[0], p.cameraPos[1], p.cameraPos[2]);
-        _targetLookAt.set(p.cameraTarget[0], p.cameraTarget[1], p.cameraTarget[2]);
-        const alpha = 1 - Math.exp(-4.2 * dt);
-        camera.position.lerp(_targetCamPos, alpha);
-        controls.target.lerp(_targetLookAt, alpha);
-        if (
-          camera.position.distanceToSquared(_targetCamPos) < 0.0004 &&
-          controls.target.distanceToSquared(_targetLookAt) < 0.0004
-        ) {
-          cameraGoalActive = false;
-        }
+        camera.position.set(p.cameraPos[0], p.cameraPos[1], p.cameraPos[2]);
+        controls.target.set(p.cameraTarget[0], p.cameraTarget[1], p.cameraTarget[2]);
+        cameraGoalActive = false;
       }
       controls.update();
 
-      // Smoothly damp axial exploded-view separation
-      currentExplode = THREE.MathUtils.damp(currentExplode, p.explodeAmount, 5.5, dt);
-      housingGroup.position.z = -currentExplode * 1.15;
-      outerStatorGroup.position.z = -currentExplode * 0.35;
-      rotorGroup.position.z = currentExplode * 0.45;
-      innerStatorGroup.position.z = currentExplode * 1.15;
-      shaftGroup.position.z = currentExplode * 1.65;
+      // Render only when something visible changed: props, a resize, the
+      // camera moving (user orbit / damping settling), or a pending goal.
+      // Otherwise skip the draw entirely so the page stays idle and cool.
+      const propsKey = [
+        camKey,
+        p.explodeAmount,
+        p.fluxIntensity,
+        p.skewEnabled,
+        p.operatingMode,
+        p.cutawayEnabled,
+        p.showFluxLines,
+        p.showMeshWireframe,
+        p.rotorSpeedMultiplier,
+      ].join('|');
+      const cameraMoved =
+        camera.position.distanceToSquared(lastCamPos) > 1e-8 ||
+        controls.target.distanceToSquared(lastCamTarget) > 1e-8;
+      const needsUpdate =
+        forceRender || propsKey !== lastRenderedKey || cameraMoved || cameraGoalActive;
+      if (!needsUpdate) {
+        if (isSoftwareGl) {
+          afterDraw(tick);
+        } else {
+          frameId = requestAnimationFrame(tick);
+        }
+        return;
+      }
+      forceRender = false;
+      lastRenderedKey = propsKey;
+      lastCamPos.copy(camera.position);
+      lastCamTarget.copy(controls.target);
 
-      // Smoothly damp 4-degree skew angle on PM segments
+      // Apply the current prop values directly (no damping transitions)
+      housingGroup.position.z = -p.explodeAmount * 1.15;
+      outerStatorGroup.position.z = -p.explodeAmount * 0.35;
+      rotorGroup.position.z = p.explodeAmount * 0.45;
+      innerStatorGroup.position.z = p.explodeAmount * 1.15;
+      shaftGroup.position.z = p.explodeAmount * 1.65;
+
+      // Apply the 4-degree skew angle directly on PM segments
       const targetSkewRad = THREE.MathUtils.degToRad(p.skewEnabled ? 4.0 : 0.0);
       if (Math.abs(currentSkewRad - targetSkewRad) > 0.0005) {
-        currentSkewRad = THREE.MathUtils.damp(currentSkewRad, targetSkewRad, 6.0, dt);
+        currentSkewRad = targetSkewRad;
         updatePmSkewInstances(currentSkewRad);
       }
 
       // Cutaway toggle (rotate housing slightly or toggle visibility)
       housingGroup.visible = p.cutawayEnabled;
-
-      // Advance rotor & magnetic field wave according to Synchronous vs. Vernier mode
-      const isVernier = p.operatingMode === 'vernier';
-      // In Vernier mode, rotor rotates slower (geared down by 2.2x) while magnetic field wave rotates fast
-      const baseOmega = (isVernier ? 0.35 : 0.95) * p.rotorSpeedMultiplier;
-      const fieldOmega = (isVernier ? 1.65 : 0.95) * p.rotorSpeedMultiplier;
-      rotorAngle += baseOmega * dt;
-      fieldWaveAngle += fieldOmega * dt;
 
       rotorGroup.rotation.z = rotorAngle;
       shaftMesh.rotation.z = rotorAngle;
@@ -934,14 +952,13 @@ export const MachineCanvas3D: React.FC<Machine3DProps> = (props) => {
       feaWireGroup.visible = p.showMeshWireframe;
 
       // Update per-instance B-field Flux Density Heatmap on Stator & Rotor Teeth
-      currentFlux = THREE.MathUtils.damp(currentFlux, p.fluxIntensity, 5.0, dt);
-      const polePairs = isVernier ? 10 : 2;
+      const polePairs = p.operatingMode === 'vernier' ? 10 : 2;
       for (let i = 0; i < NS; i++) {
         const a = -Math.PI / 2 + (i * Math.PI * 2) / NS;
         const bVal = 0.18 + 0.82 * (0.5 + 0.5 * Math.cos(polePairs * (a - fieldWaveAngle)));
-        sampleFluxColor(bVal, currentFlux, _color);
+        sampleFluxColor(bVal, p.fluxIntensity, _color);
         osToothInstanced.setColorAt(i, _color);
-        sampleFluxColor(bVal * 0.78, currentFlux, _color);
+        sampleFluxColor(bVal * 0.78, p.fluxIntensity, _color);
         osYokeInstanced.setColorAt(i, _color);
       }
       if (osToothInstanced.instanceColor) osToothInstanced.instanceColor.needsUpdate = true;
@@ -950,7 +967,7 @@ export const MachineCanvas3D: React.FC<Machine3DProps> = (props) => {
       for (let i = 0; i < NR; i++) {
         const a = (i * Math.PI * 2) / NR + rotorAngle;
         const bVal = 0.22 + 0.78 * (0.5 + 0.5 * Math.cos(polePairs * (a - fieldWaveAngle)));
-        sampleFluxColor(bVal * 0.9, currentFlux, _color);
+        sampleFluxColor(bVal * 0.9, p.fluxIntensity, _color);
         rotToothInstanced.setColorAt(i, _color);
         rotCoreInstanced.setColorAt(i, _color);
       }
@@ -975,6 +992,7 @@ export const MachineCanvas3D: React.FC<Machine3DProps> = (props) => {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      forceRender = true;
     };
     window.addEventListener('resize', handleResize);
 

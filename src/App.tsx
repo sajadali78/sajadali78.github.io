@@ -1,744 +1,310 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Sajad Ali's portfolio: a plain scrolling portfolio page. No 3D view,
+ * no modal, no charts, no dock — just sections a visitor can read top
+ * to bottom on a phone or a desktop.
  */
 
-import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  Sliders,
-  Copy,
-  Check,
-  Maximize2,
-  BookOpen,
-  Cpu,
-  FileText,
-  GraduationCap,
-  Mail,
-} from 'lucide-react';
+import React from 'react';
 import {
   AUTHOR_PROFILE,
-  CHAPTERS,
+  MACHINES,
   PUBLICATIONS,
-  THESIS_SUMMARY,
-  CV_DATA,
-  MACHINE_DIMENSIONS,
-  ParetoCandidate,
+  WEB_PROJECTS,
+  EXPERIENCE,
+  EDUCATION,
+  SKILLS,
+  LANGUAGES,
+  HONOURS,
+  REFERENCES,
+  CURRENT_RESEARCH,
 } from './data/portfolioData';
-import type { DossierTab } from './components/DossierModal';
-// Lazy-loaded so the dossier modal is fetched as a separate chunk instead of
-// blocking the first paint of the page shell. The 3D machine viewport was
-// removed: the portfolio is static pages, with no Three.js code loaded.
-const DossierModal = lazy(() =>
-  import('./components/DossierModal').then((m) => ({ default: m.DossierModal })),
-);
-import {
-  TorqueSkewChart,
-  ParetoScatterChart,
-  EmQuickSizer,
-} from './components/InteractiveCharts';
-import { DockTooltip } from './components/DockTooltip';
+
+function Section({
+  id,
+  eyebrow,
+  title,
+  children,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="max-w-5xl mx-auto px-5 md:px-8 py-12 md:py-16">
+      <p className="font-mono text-xs text-[#d0864a] tracking-wider mb-2">{eyebrow}</p>
+      <h2 className="font-display text-3xl md:text-4xl font-normal text-[#e9e4da] mb-6">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-[#161e24] border border-[#36424a] rounded-2xl p-5 md:p-6 shadow-xl">
+      {children}
+    </div>
+  );
+}
+
+function ExternalLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-block text-sm text-[#d0864a] hover:underline font-medium"
+    >
+      {label} →
+    </a>
+  );
+}
 
 export default function App() {
-  const [chapterIndex, setChapterIndex] = useState<number>(0);
-  const [activeModal, setActiveModal] = useState<DossierTab>(null);
-  // Once the dossier has been opened, keep it mounted (it renders nothing while
-  // closed) so its calculator state survives, while its chunk still only loads
-  // on first open.
-  const [dossierTouched, setDossierTouched] = useState<boolean>(false);
-  useEffect(() => {
-    if (activeModal) setDossierTouched(true);
-  }, [activeModal]);
-  const [dockCollapsed, setDockCollapsed] = useState<boolean>(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Static page state (synchronized with chapters). Skew and operating mode
-  // still drive the torque-ripple chart; the 3D viewport controls are gone.
-  const currentChapter = CHAPTERS[chapterIndex];
-  const [skewEnabled, setSkewEnabled] = useState<boolean>(currentChapter.skewEnabled);
-  const [operatingMode, setOperatingMode] = useState<'synchronous' | 'vernier'>(
-    currentChapter.operatingMode
-  );
-
-  // Sync chart state when user steps to a new chapter/page
-  const goToChapter = (idx: number) => {
-    const clamped = Math.max(0, Math.min(CHAPTERS.length - 1, idx));
-    const target = CHAPTERS[clamped];
-    setChapterIndex(clamped);
-    setSkewEnabled(target.skewEnabled);
-    setOperatingMode(target.operatingMode);
-  };
-
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  // Keyboard navigation & engineering shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (activeModal) setActiveModal(null);
-        return;
-      }
-      if (activeModal) return;
-
-      // Skip shortcuts if active element is an editable form element
-      const activeTag = (document.activeElement?.tagName || '').toLowerCase();
-      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
-        return;
-      }
-
-      const key = e.key.toLowerCase();
-
-      // Dock Hotkeys
-      if (key === 'h') {
-        setDockCollapsed((prev) => !prev);
-      } else if (key === 'm') {
-        setOperatingMode((m) => (m === 'synchronous' ? 'vernier' : 'synchronous'));
-      } else if (key === 's') {
-        setSkewEnabled((s) => !s);
-      } else if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
-        e.preventDefault();
-        goToChapter(chapterIndex + 1);
-      } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        goToChapter(chapterIndex - 1);
-      } else if (['1', '2', '3', '4', '5', '6'].includes(e.key)) {
-        const num = parseInt(e.key, 10) - 1;
-        goToChapter(num);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [chapterIndex, activeModal]);
-
-  // Throttled wheel navigation on the narrative overlay
-  const wheelCooldownRef = useRef<number>(0);
-  const handleNarrativeWheel = (e: React.WheelEvent) => {
-    const now = Date.now();
-    if (now - wheelCooldownRef.current < 650) return;
-    if (Math.abs(e.deltaY) > 28) {
-      wheelCooldownRef.current = now;
-      if (e.deltaY > 0 && chapterIndex < CHAPTERS.length - 1) {
-        goToChapter(chapterIndex + 1);
-      } else if (e.deltaY < 0 && chapterIndex > 0) {
-        goToChapter(chapterIndex - 1);
-      }
-    }
-  };
-
-  const handleParetoSelect = (cand: ParetoCandidate) => {
-    setSkewEnabled(cand.skewDeg >= 2.0);
-  };
-
+  const p = AUTHOR_PROFILE;
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#12181c] text-[#e9e4da]">
-
-
-      {/* 2. TOP BAR CONTRACT: Brand — 6 Pages (1..6) — Primary Action */}
-      <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between gap-6 px-6 py-3.5 bg-[#12181c]/95 border-b border-[#36424a]">
-        {/* Zone 1: Brand wordmark */}
-        <a
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveModal(null);
-            goToChapter(0);
-          }}
-          className="font-display text-lg font-semibold tracking-tight text-[#e9e4da] whitespace-nowrap shrink-0 hover:text-[#d0864a] transition-colors"
-        >
-          Sajad Ali
-        </a>
-
-        {/* Zone 2: 6 concise single-line text links for pages 1..6 (desktop) + dropdown (mobile) */}
-        <nav
-          aria-label="Portfolio Pages Navigation"
-          className="hidden md:flex items-center gap-4 lg:gap-7 text-xs lg:text-sm font-medium text-[#9aa5a8]"
-        >
-          {CHAPTERS.map((chap) => {
-            const active = chap.id === chapterIndex && activeModal === null;
-            return (
-              <button
-                key={chap.id}
-                type="button"
-                onClick={() => {
-                  setActiveModal(null);
-                  goToChapter(chap.id);
-                }}
-                className={`hover:text-[#e9e4da] hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  active ? 'text-[#e9e4da] underline decoration-[#d0864a] font-semibold' : ''
-                }`}
-              >
-                {chap.id + 1}. {chap.shortTitle}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Mobile Page Selector (visible on small screens) */}
-        <div className="flex md:hidden items-center">
-          <select
-            value={chapterIndex}
-            onChange={(e) => {
-              setActiveModal(null);
-              goToChapter(parseInt(e.target.value, 10));
-            }}
-            aria-label="Select portfolio page"
-            className="bg-[#1b2328] border border-[#36424a] text-xs font-mono text-[#e9e4da] rounded-lg px-2.5 py-1.5 focus:border-[#d0864a] focus:outline-none"
-          >
-            {CHAPTERS.map((chap) => (
-              <option key={chap.id} value={chap.id}>
-                {chap.id + 1}. {chap.shortTitle}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Zone 3: 1 primary action */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveModal(null);
-              goToChapter(5); // Go to Contact (Page 6)
-            }}
-            className="px-3.5 py-1.5 md:px-4 md:py-2 text-xs font-semibold text-[#12181c] bg-[#d0864a] rounded-lg hover:bg-[#e0965a] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+    <div className="min-h-screen bg-[#12181c] text-[#e9e4da]">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-[#12181c]/95 border-b border-[#36424a]">
+        <div className="max-w-5xl mx-auto px-5 md:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+          <a href="#top" className="font-display text-xl text-[#e9e4da]">
+            Sajad Ali
+          </a>
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#9aa5a8]">
+            <a href="#about" className="hover:text-[#e9e4da]">About</a>
+            <a href="#machines" className="hover:text-[#e9e4da]">Machines</a>
+            <a href="#publications" className="hover:text-[#e9e4da]">Publications</a>
+            <a href="#projects" className="hover:text-[#e9e4da]">Web Projects</a>
+            <a href="#experience" className="hover:text-[#e9e4da]">Experience</a>
+            <a href="#contact" className="hover:text-[#e9e4da]">Contact</a>
+          </nav>
+          <a
+            href={`mailto:${p.email}?subject=PhD%20opportunity`}
+            className="px-3.5 py-1.5 text-xs font-semibold text-[#12181c] bg-[#d0864a] rounded-lg hover:bg-[#e0965a] whitespace-nowrap"
           >
             Contact for PhD
-          </button>
+          </a>
         </div>
       </header>
 
-{/* 3. CHAPTER NARRATIVE / PAGE CONTENT CARD */}
-      {(
-        <aside
-          onWheel={handleNarrativeWheel}
-          className={`fixed z-20 transition-all duration-300 ${
-            currentChapter.alignment === 'right'
-              ? 'top-16 right-6 w-[min(480px,94vw)] max-h-[calc(100vh-170px)]'
-              : currentChapter.alignment === 'bottom'
-              ? 'top-16 left-6 w-[min(490px,94vw)] max-h-[calc(100vh-170px)]'
-              : 'top-16 left-6 w-[min(480px,94vw)] max-h-[calc(100vh-170px)]'
-          } overflow-y-auto bg-[#161e24]/95 border border-[#36424a] rounded-2xl p-5 md:p-6 shadow-2xl`}
-        >
-          {/* Page Eyebrow & Stepper */}
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="font-mono text-xs text-[#d0864a] tracking-wider">
-              {currentChapter.eyebrow}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => goToChapter(chapterIndex - 1)}
-                disabled={chapterIndex === 0}
-                className="p-1 rounded border border-[#36424a] text-[#9aa5a8] hover:text-[#e9e4da] hover:border-[#d0864a] disabled:opacity-30 cursor-pointer"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <span className="font-mono text-xs text-[#9aa5a8] tabular-nums">
-                {chapterIndex + 1} / {CHAPTERS.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => goToChapter(chapterIndex + 1)}
-                disabled={chapterIndex === CHAPTERS.length - 1}
-                className="p-1 rounded border border-[#36424a] text-[#9aa5a8] hover:text-[#e9e4da] hover:border-[#d0864a] disabled:opacity-30 cursor-pointer"
-                aria-label="Next page"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-
-            </div>
-          </div>
-
-          {/* Headline */}
-          <h1 className="font-display text-2xl md:text-3xl font-normal text-[#e9e4da] leading-tight mb-3">
-            {currentChapter.headline}{' '}
-            <em className="italic text-[#d0864a] font-normal">{currentChapter.headlineAccent}</em>
-          </h1>
-
-          {/* Body Prose */}
-          <div className="space-y-2.5 text-sm text-[#e9e4da]/90 leading-relaxed">
-            {currentChapter.paragraphs.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-
-          {/* PAGE 1: MACHINE SPECIFICATIONS SUMMARY */}
-          {currentChapter.pageType === 'machine' && (
-            <div className="mt-4 pt-3 border-t border-[#36424a] space-y-3">
-              <div className="font-mono text-xs text-[#d0864a]">
-                DMDS-HRSVM BENCHMARK PARAMETERS
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                {MACHINE_DIMENSIONS.slice(0, 6).map((dim) => (
-                  <div key={dim.parameter} className="bg-[#12181c] p-2 rounded border border-[#36424a]/60">
-                    <span className="text-[#9aa5a8] block text-[10px]">{dim.parameter}</span>
-                    <strong className="text-[#e9e4da]">{dim.value}</strong>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  type="button"
-                  onClick={() => goToChapter(1)}
-                  className="inline-flex items-center gap-1 text-xs font-mono text-[#d0864a] hover:underline cursor-pointer"
-                >
-                  <span>Explore Publications (Page 2) →</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('thesis')}
-                  className="inline-flex items-center gap-1 text-xs font-mono text-[#9aa5a8] hover:text-[#e9e4da] cursor-pointer"
-                >
-                  <span>View Thesis Dossier</span>
-                  <Maximize2 className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* PAGE 2: PUBLICATIONS SHOWCASE */}
-          {currentChapter.pageType === 'publications' && (
-            <div className="mt-4 pt-3 border-t border-[#36424a] space-y-3.5">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-[#d0864a]">PEER-REVIEWED ARTICLES</span>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('publications')}
-                  className="inline-flex items-center gap-1 text-xs font-mono text-[#9aa5a8] hover:text-[#d0864a] cursor-pointer"
-                >
-                  <span>Expand Full View</span>
-                  <Maximize2 className="w-3 h-3" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {PUBLICATIONS.map((pub, idx) => (
-                  <div
-                    key={pub.id}
-                    className="border border-[#36424a] bg-[#12181c] rounded-xl p-3.5 space-y-2"
-                  >
-                    <div className="flex items-center justify-between text-[11px] font-mono text-[#9aa5a8]">
-                      <span>
-                        0{idx + 1}. {pub.category} · {pub.year}
-                      </span>
-                      {pub.impactNote && (
-                        <span className="text-[#8fb27a]">{pub.impactNote}</span>
-                      )}
-                    </div>
-                    <div className="text-xs font-semibold text-[#e9e4da] leading-snug">
-                      {pub.title}
-                    </div>
-                    <p className="text-[11px] text-[#9aa5a8] italic">{pub.venue}</p>
-                    <div className="flex items-center gap-2 pt-1 border-t border-[#36424a]/50">
-                      <a
-                        href={pub.doiUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-mono text-[#d0864a] hover:underline"
-                      >
-                        <span>DOI Paper</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                      <span>·</span>
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(pub.bibtex, pub.id)}
-                        className="inline-flex items-center gap-1 text-[11px] font-mono text-[#9aa5a8] hover:text-[#e9e4da] cursor-pointer"
-                      >
-                        {copiedId === pub.id ? (
-                          <>
-                            <Check className="w-3 h-3 text-[#8fb27a]" />
-                            <span>Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy BibTeX</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* PAGE 3: THESIS & TORQUE-RIPPLE ANALYSIS */}
-          {currentChapter.pageType === 'thesis' && (
-            <div className="mt-4 pt-3 border-t border-[#36424a] space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-[#d0864a]">
-                  4.0° SKEW &amp; TORQUE RIPPLE SUPPRESSION
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('thesis')}
-                  className="inline-flex items-center gap-1 text-xs font-mono text-[#9aa5a8] hover:text-[#d0864a] cursor-pointer"
-                >
-                  <span>Expand Thesis</span>
-                  <Maximize2 className="w-3 h-3" />
-                </button>
-              </div>
-
-              <TorqueSkewChart
-                skewEnabled={skewEnabled}
-                operatingMode={operatingMode}
-                onToggleSkew={setSkewEnabled}
-                onToggleMode={setOperatingMode}
-              />
-
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
-                <div className="bg-[#12181c] p-2 rounded border border-[#36424a]/60">
-                  <span className="text-[#9aa5a8] block text-[10px]">DMDS-WRSVM Model</span>
-                  <span className="text-[#e9e4da]">Wound rotor excitation</span>
-                  <span className="text-[#d0864a] block mt-0.5">Ripple: 68% → 29%</span>
-                </div>
-                <div className="bg-[#12181c] p-2 rounded border border-[#36424a]/60">
-                  <span className="text-[#9aa5a8] block text-[10px]">DMDS-HRSVM (Chosen)</span>
-                  <span className="text-[#e9e4da]">Hybrid PM + DC slots</span>
-                  <span className="text-[#8fb27a] block mt-0.5">Ripple: 73% → 27%</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* PAGE 4: EM DESIGN SUITE & SCRIPTS */}
-          {currentChapter.pageType === 'software' && (
-            <div className="mt-4 pt-3 border-t border-[#36424a] space-y-3.5">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-[#d0864a]">
-                  OPEN-SOURCE SOFTWARE &amp; FEA AUTOMATION
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('software')}
-                  className="inline-flex items-center gap-1 text-xs font-mono text-[#9aa5a8] hover:text-[#d0864a] cursor-pointer"
-                >
-                  <span>Full Workstation</span>
-                  <Maximize2 className="w-3 h-3" />
-                </button>
-              </div>
-
-              <EmQuickSizer />
-
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <a
-                  href={AUTHOR_PROFILE.emSuiteLiveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d0864a] text-[#12181c] text-xs font-semibold hover:bg-[#e0965a] transition-colors"
-                >
-                  <span>Launch Live EM Suite</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* PAGE 5: CV & ACADEMIC REFERENCES */}
-          {currentChapter.pageType === 'cv' && (
-            <div className="mt-4 pt-3 border-t border-[#36424a] space-y-3.5">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-[#d0864a]">
-                  NSGA-II PARETO FRONT &amp; REFERENCES
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('cv')}
-                  className="inline-flex items-center gap-1 text-xs font-mono text-[#9aa5a8] hover:text-[#d0864a] cursor-pointer"
-                >
-                  <span>Complete CV</span>
-                  <Maximize2 className="w-3 h-3" />
-                </button>
-              </div>
-
-              <ParetoScatterChart onSelectCandidate={handleParetoSelect} />
-
-              <div className="border border-[#36424a] bg-[#12181c] rounded-xl p-3 space-y-2">
-                <div className="font-mono text-[11px] text-[#9aa5a8]">
-                  4 ACADEMIC FACULTY REFERENCES (SUKKUR IBA UNIVERSITY)
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  {CV_DATA.references.map((ref) => (
-                    <div key={ref.email} className="p-1.5 rounded bg-[#161e24] border border-[#36424a]/50">
-                      <div className="font-medium text-[#e9e4da]">{ref.name}</div>
-                      <a
-                        href={`mailto:${ref.email}`}
-                        className="font-mono text-[11px] text-[#d0864a] hover:underline block truncate"
-                      >
-                        {ref.email}
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* PAGE 6: CONTACT & INQUIRIES */}
-          {currentChapter.pageType === 'contact' && (
-            <div className="mt-4 pt-3 border-t border-[#36424a] space-y-3.5">
-              <div className="border border-[#36424a] bg-[#12181c] rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-[#9aa5a8]">Institutional Email</span>
-                  <span className="text-[11px] font-mono text-[#8fb27a]">Open for PhD Fall/Spring</span>
-                </div>
-                <div className="font-mono text-sm text-[#e9e4da]">{AUTHOR_PROFILE.email}</div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`mailto:${AUTHOR_PROFILE.email}?subject=PhD%20Research%20Inquiry`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d0864a] text-[#12181c] text-xs font-semibold hover:bg-[#e0965a] transition-colors"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>Compose Email</span>
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(AUTHOR_PROFILE.email, 'email-contact')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#36424a] text-xs font-mono text-[#e9e4da] hover:border-[#d0864a] cursor-pointer"
-                  >
-                    {copiedId === 'email-contact' ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-[#8fb27a]" />
-                        <span>Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy Email</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <a
-                  href={AUTHOR_PROFILE.scholarUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2.5 rounded-lg bg-[#12181c] border border-[#36424a] hover:border-[#d0864a] flex items-center justify-between text-[#e9e4da]"
-                >
-                  <span>Google Scholar</span>
-                  <ExternalLink className="w-3 h-3 text-[#d0864a]" />
-                </a>
-                <a
-                  href={AUTHOR_PROFILE.orcidUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2.5 rounded-lg bg-[#12181c] border border-[#36424a] hover:border-[#d0864a] flex items-center justify-between text-[#e9e4da]"
-                >
-                  <span>ORCID Profile</span>
-                  <ExternalLink className="w-3 h-3 text-[#d0864a]" />
-                </a>
-                <a
-                  href={AUTHOR_PROFILE.linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2.5 rounded-lg bg-[#12181c] border border-[#36424a] hover:border-[#d0864a] flex items-center justify-between text-[#e9e4da]"
-                >
-                  <span>LinkedIn</span>
-                  <ExternalLink className="w-3 h-3 text-[#d0864a]" />
-                </a>
-                <a
-                  href={AUTHOR_PROFILE.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2.5 rounded-lg bg-[#12181c] border border-[#36424a] hover:border-[#d0864a] flex items-center justify-between text-[#e9e4da]"
-                >
-                  <span>GitHub (@sajadali78)</span>
-                  <ExternalLink className="w-3 h-3 text-[#d0864a]" />
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* 4-Metric Quantitative KPI Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-3.5 border-t border-[#36424a]">
-            {currentChapter.kpiStrip.map((kpi) => (
-              <div key={kpi.label}>
-                <div className="text-[11px] text-[#9aa5a8] truncate">{kpi.label}</div>
-                <div className="font-mono text-xs font-semibold text-[#e9e4da] tabular-nums">
-                  {kpi.value}{' '}
-                  {kpi.unit && <span className="text-[#d0864a] font-normal">{kpi.unit}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Unboxed Metadata Footer Line (Zero-Pill Discipline) */}
-          <div className="mt-3 pt-2.5 border-t border-[#36424a]/60 font-mono text-[11px] text-[#9aa5a8] leading-relaxed">
-            {currentChapter.metaLine}
-          </div>
-
-          {/* Next Page Action */}
-          <div className="mt-3 flex items-center justify-between text-xs font-mono">
-            <span className="text-[#9aa5a8]">Drag 3D motor to orbit · Click parts to inspect</span>
-            {chapterIndex < CHAPTERS.length - 1 ? (
-              <button
-                type="button"
-                onClick={() => goToChapter(chapterIndex + 1)}
-                className="text-[#d0864a] hover:underline font-medium cursor-pointer whitespace-nowrap"
-              >
-                Next: {chapterIndex + 2}. {CHAPTERS[chapterIndex + 1].shortTitle} →
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => goToChapter(0)}
-                className="text-[#d0864a] hover:underline font-medium cursor-pointer whitespace-nowrap"
-              >
-                ↺ Back to 1. Machine
-              </button>
-            )}
-          </div>
-        </aside>
-      )}
-
-{/* 4. UNIFIED COLLAPSIBLE BOTTOM ENGINEERING CONTROL DOCK (<= 15% Viewport Footprint) */}
-      <div
-        style={{
-          bottom: '16px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          maxWidth: 'min(940px, 95vw)',
-        }}
-        className="fixed z-30 w-full flex flex-col items-center pointer-events-none"
-      >
-        {/* Collapse / Expand Toggle Pill */}
-        <DockTooltip
-          label={dockCollapsed ? 'Show Engineering Controls' : 'Hide Engineering Controls'}
-          hotkey="H"
-          description="Toggle the engineering dock"
-        >
-          <button
-            type="button"
-            onClick={() => setDockCollapsed((prev) => !prev)}
-            className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1 rounded-t-lg bg-[#161e24] border border-b-0 border-[#36424a] text-[11px] font-mono text-[#9aa5a8] hover:text-[#e9e4da] cursor-pointer transition-colors"
+      {/* Hero */}
+      <section id="top" className="max-w-5xl mx-auto px-5 md:px-8 pt-14 pb-10 md:pt-20 md:pb-14">
+        <p className="font-mono text-xs text-[#d0864a] tracking-wider mb-3">
+          {p.role} · {p.institution} · {p.location}
+        </p>
+        <h1 className="font-display text-4xl md:text-6xl font-normal leading-tight mb-5">
+          Electromagnetic machine design meets machine learning
+        </h1>
+        <p className="text-base md:text-lg text-[#e9e4da]/85 leading-relaxed max-w-3xl mb-4">
+          {p.tagline}
+        </p>
+        <p className="text-base text-[#9aa5a8] leading-relaxed max-w-3xl mb-7">{p.phdObjective}</p>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="#publications"
+            className="px-4 py-2 text-sm font-semibold text-[#12181c] bg-[#d0864a] rounded-lg hover:bg-[#e0965a]"
           >
-            <Sliders className="w-3 h-3 text-[#d0864a]" />
-            <span>{dockCollapsed ? '▴ Show Engineering Controls (H)' : '▾ Hide Controls (H)'}</span>
-            {dockCollapsed ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-        </DockTooltip>
+            View Publications
+          </a>
+          <a
+            href="#machines"
+            className="px-4 py-2 text-sm font-medium text-[#e9e4da] border border-[#36424a] rounded-lg hover:border-[#d0864a]"
+          >
+            Machines I Designed
+          </a>
+        </div>
+      </section>
 
-        {/* Main Dock Body */}
-        {!dockCollapsed && (
-          <div className="pointer-events-auto w-full bg-[#161e24]/95 border border-[#36424a] rounded-xl px-4 py-3 shadow-2xl flex flex-wrap items-center justify-between gap-4">
-            {/* Group A: 6 Pages Stepper (1 to 6) */}
-            <div className="flex items-center gap-1">
-              <span className="font-mono text-[11px] text-[#9aa5a8] mr-1 hidden sm:inline">
-                Pages:
-              </span>
-              {CHAPTERS.map((chap, idx) => {
-                const active = chap.id === chapterIndex;
-                return (
-                  <DockTooltip
-                    key={chap.id}
-                    label={`Page ${chap.id + 1}: ${chap.shortTitle}`}
-                    hotkey={`${chap.id + 1}`}
-                    description={`Jump directly to Page ${chap.id + 1} (${chap.eyebrow})`}
-                    align={idx === 0 ? 'left' : 'center'}
+      {/* About */}
+      <Section id="about" eyebrow="About" title="About me">
+        <div className="space-y-4 text-base leading-relaxed text-[#e9e4da]/85 max-w-3xl">
+          <p>
+            I am Sajad Ali, an electrical engineering graduate from Sukkur IBA University. My work
+            is the design, modelling and simulation of advanced electrical machines, especially
+            dual-stator hybrid-rotor machines.
+          </p>
+          <p>
+            I analyse machines with finite element analysis in Ansys Maxwell and PyAEDT, and I
+            build machine-learning surrogate models to make the design loop faster. My ME thesis
+            designed a dual stator brushless hybrid rotor machine that operates in both
+            synchronous and vernier modes.
+          </p>
+          <p>{CURRENT_RESEARCH}</p>
+          <p>
+            I am open to PhD positions and to collaboration on electrical machine design and
+            optimisation.
+          </p>
+        </div>
+      </Section>
+
+      {/* Machines */}
+      <Section id="machines" eyebrow="Electrical Machines" title="Machines I designed">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {MACHINES.map((m) => (
+            <Card key={m.title}>
+              <p className="font-mono text-[11px] text-[#d0864a] tracking-wider mb-1">{m.kind}</p>
+              <h3 className="font-display text-xl mb-2">{m.title}</h3>
+              <p className="text-sm text-[#e9e4da]/85 leading-relaxed mb-3">{m.description}</p>
+              <ul className="flex flex-wrap gap-1.5">
+                {m.specs.map((s) => (
+                  <li
+                    key={s}
+                    className="px-2 py-0.5 rounded bg-[#12181c] border border-[#36424a] font-mono text-[11px] text-[#9aa5a8]"
                   >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveModal(null);
-                        goToChapter(chap.id);
-                      }}
-                      className={`px-2.5 py-1 rounded text-xs font-mono transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                        active
-                          ? 'bg-[#d0864a] text-[#12181c] font-semibold'
-                          : 'bg-[#12181c] text-[#9aa5a8] hover:text-[#e9e4da] border border-[#36424a]/60'
-                      }`}
-                    >
-                      <span>{chap.id + 1}</span>
-                      <span className="hidden lg:inline text-[11px]">{chap.shortTitle}</span>
-                    </button>
-                  </DockTooltip>
-                );
-              })}
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ))}
+        </div>
+      </Section>
+
+      {/* Publications */}
+      <Section id="publications" eyebrow="Publications" title="Publications">
+        <div className="space-y-4">
+          {PUBLICATIONS.map((pub) => (
+            <Card key={pub.title}>
+              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+                <p className="font-mono text-[11px] text-[#d0864a] tracking-wider">
+                  {pub.venue} · {pub.year}
+                </p>
+              </div>
+              <h3 className="font-display text-lg leading-snug mb-2">{pub.title}</h3>
+              {pub.doiUrl ? (
+                <ExternalLink href={pub.doiUrl} label={`DOI: ${pub.doi}`} />
+              ) : (
+                <p className="text-sm text-[#9aa5a8]">No DOI or paper link verified yet.</p>
+              )}
+            </Card>
+          ))}
+        </div>
+      </Section>
+
+      {/* Web projects */}
+      <Section id="projects" eyebrow="Vibe Coding" title="Web projects I built">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {WEB_PROJECTS.map((w) => (
+            <Card key={w.title}>
+              <h3 className="font-display text-xl mb-2">{w.title}</h3>
+              <p className="text-sm text-[#e9e4da]/85 leading-relaxed mb-4">{w.description}</p>
+              <ExternalLink href={w.liveUrl} label="Open Live App" />
+            </Card>
+          ))}
+        </div>
+      </Section>
+
+      {/* Experience & education */}
+      <Section id="experience" eyebrow="Background" title="Experience and education">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <h3 className="font-display text-xl mb-4">Experience</h3>
+            <div className="space-y-4">
+              {EXPERIENCE.map((e) => (
+                <div key={e.title}>
+                  <p className="font-semibold">{e.title}</p>
+                  <p className="text-sm text-[#9aa5a8]">{e.place}</p>
+                  <p className="font-mono text-xs text-[#d0864a]">{e.period}</p>
+                  <p className="text-sm text-[#e9e4da]/85 mt-1">{e.detail}</p>
+                </div>
+              ))}
             </div>
-
-
-
-            {/* Group C: Synchronous vs Vernier Mode & Electromagnetic Toggles */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {/* Mode Toggle */}
-              <DockTooltip
-                label="Operating Mode"
-                hotkey="M"
-                description="Toggle High-Speed Synchronous (P=2) or Low-Speed Vernier Magnetic Gearing (Zr = Zs + p)"
-              >
-                <button
-                  type="button"
-                  onClick={() =>
-                    setOperatingMode((m) => (m === 'synchronous' ? 'vernier' : 'synchronous'))
-                  }
-                  className="px-2.5 py-1 rounded text-xs font-mono bg-[#12181c] border border-[#36424a] hover:border-[#d0864a] text-[#e9e4da] whitespace-nowrap shrink-0 cursor-pointer"
-                >
-                  Mode:{' '}
-                  <span className="text-[#d0864a]">
-                    {operatingMode === 'vernier' ? 'Vernier' : 'Sync'}
-                  </span>
-                </button>
-              </DockTooltip>
-
-              {/* 4° Skew Toggle */}
-              <DockTooltip
-                label="4.0° Helical Skew"
-                hotkey="S"
-                description="Toggle 4° stator slot & PM skew (suppresses Vernier low-speed ripple from 73% down to 27%)"
-              >
-                <button
-                  type="button"
-                  onClick={() => setSkewEnabled((s) => !s)}
-                  className={`px-2.5 py-1 rounded text-xs font-mono border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    skewEnabled
-                      ? 'bg-[#d0864a]/20 border-[#d0864a] text-[#e9e4da]'
-                      : 'bg-[#12181c] border-[#36424a] text-[#9aa5a8]'
-                  }`}
-                >
-                  4° Skew: {skewEnabled ? 'ON' : 'OFF'}
-                </button>
-              </DockTooltip>
-
-
-
-
-
-
-
-
+          </Card>
+          <Card>
+            <h3 className="font-display text-xl mb-4">Education</h3>
+            <div className="space-y-4">
+              {EDUCATION.map((e) => (
+                <div key={e.title}>
+                  <p className="font-semibold">{e.title}</p>
+                  <p className="text-sm text-[#9aa5a8]">{e.place}</p>
+                  <p className="font-mono text-xs text-[#d0864a]">{e.period}</p>
+                  <p className="text-sm text-[#e9e4da]/85 mt-1">{e.detail}</p>
+                </div>
+              ))}
             </div>
+          </Card>
+        </div>
+      </Section>
+
+      {/* Skills */}
+      <Section id="skills" eyebrow="Tools & Skills" title="What I work with">
+        <ul className="flex flex-wrap gap-2 mb-8">
+          {SKILLS.map((s) => (
+            <li
+              key={s}
+              className="px-3 py-1.5 rounded-full bg-[#161e24] border border-[#36424a] text-sm text-[#e9e4da]/90"
+            >
+              {s}
+            </li>
+          ))}
+        </ul>
+        <p className="text-sm text-[#9aa5a8]">
+          Languages: {LANGUAGES.join(', ')}.
+        </p>
+      </Section>
+
+      {/* Honours */}
+      <Section id="honours" eyebrow="Honours" title="Awards and scholarships">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {HONOURS.map((h) => (
+            <Card key={h.title}>
+              <h3 className="font-display text-lg leading-snug mb-1">{h.title}</h3>
+              <p className="text-sm text-[#9aa5a8]">{h.detail}</p>
+            </Card>
+          ))}
+        </div>
+      </Section>
+
+      {/* References */}
+      <Section id="references" eyebrow="References" title="References">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {REFERENCES.map((r) => (
+            <Card key={r.name}>
+              <h3 className="font-display text-lg mb-1">{r.name}</h3>
+              <p className="text-sm text-[#9aa5a8]">{r.title}</p>
+              <p className="text-sm text-[#9aa5a8] mb-3">{r.institution}</p>
+              <a href={`mailto:${r.email}`} className="text-sm text-[#d0864a] hover:underline break-all">
+                {r.email}
+              </a>
+            </Card>
+          ))}
+        </div>
+      </Section>
+
+      {/* Contact */}
+      <Section id="contact" eyebrow="Contact" title="Get in touch">
+        <Card>
+          <p className="text-base text-[#e9e4da]/85 leading-relaxed mb-4">
+            I am available for PhD positions and for research collaboration on electrical machine
+            design and optimisation.
+          </p>
+          <div className="space-y-2 text-sm">
+            <p>
+              Email: <a href={`mailto:${p.email}`} className="text-[#d0864a] hover:underline break-all">{p.email}</a>
+            </p>
+            <p>
+              Also: <a href={`mailto:${p.secondaryEmail}`} className="text-[#d0864a] hover:underline break-all">{p.secondaryEmail}</a>
+            </p>
+            <p>Location: {p.location}</p>
           </div>
-        )}
-      </div>
+          <div className="flex flex-wrap gap-4 mt-5">
+            <ExternalLink href={p.linkedinUrl} label="LinkedIn" />
+            <ExternalLink href={p.scholarUrl} label="Google Scholar" />
+            <ExternalLink href={p.researchGateUrl} label="ResearchGate" />
+            <ExternalLink href={p.orcidUrl} label="ORCID" />
+            <ExternalLink href={p.githubUrl} label="GitHub" />
+          </div>
+        </Card>
+      </Section>
 
-      {/* 5. ACADEMIC DOSSIER DRAWER MODAL (Full Wide Reader for Publications, Thesis, EM Design Suite, CV, Contact) */}
-      {dossierTouched && (
-        <Suspense fallback={null}>
-        <DossierModal
-          activeTab={activeModal}
-          onClose={() => setActiveModal(null)}
-          onSelectTab={(tab) => setActiveModal(tab)}
-          skewEnabled={skewEnabled}
-          operatingMode={operatingMode}
-          onToggleSkew={setSkewEnabled}
-          onToggleMode={setOperatingMode}
-        />
-        </Suspense>
-      )}
+      <footer className="border-t border-[#36424a] py-6">
+        <p className="text-center font-mono text-xs text-[#9aa5a8]">
+          Sajad Ali · {p.institution} · {p.location}
+        </p>
+      </footer>
     </div>
   );
 }

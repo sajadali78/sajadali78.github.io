@@ -518,15 +518,6 @@ export default function App() {
                   <span>Launch Live EM Suite</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
-                <a
-                  href={AUTHOR_PROFILE.emSuiteRepoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#36424a] text-xs font-mono text-[#e9e4da] hover:border-[#d0864a] transition-colors"
-                >
-                  <span>GitHub Repository</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
               </div>
             </div>
           )}

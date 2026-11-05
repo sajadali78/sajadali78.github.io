@@ -309,15 +309,6 @@ export const DossierModal: React.FC<DossierModalProps> = ({
                       <span>Open Live App</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
-                    <a
-                      href={AUTHOR_PROFILE.emSuiteRepoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#36424a] text-xs font-mono text-[#e9e4da] hover:border-[#d0864a] transition-colors whitespace-nowrap"
-                    >
-                      <span>GitHub Source</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
                   </div>
                 </div>
 
@@ -475,6 +466,67 @@ export const DossierModal: React.FC<DossierModalProps> = ({
                     <pre className="text-[11px] font-mono text-[#e9e4da]/90 overflow-x-auto leading-relaxed">
                       {THESIS_SUMMARY.ironPythonSnippet}
                     </pre>
+                  </div>
+                </div>
+              </div>
+              {/* FluxLab Section */}
+              <div className="border border-[#36424a] bg-[#1b2328] rounded-xl p-6 space-y-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="font-mono text-xs text-[#d0864a] mb-1">
+                      INTERACTIVE SIZING &amp; PARAMETRIC CAD CURRICULUM
+                    </div>
+                    <h3 className="text-xl font-semibold text-[#e9e4da]">
+                      FluxLab — Motor Geometry Quest
+                    </h3>
+                    <p className="text-sm text-[#9aa5a8] mt-1 max-w-2xl leading-relaxed">
+                      Interactive electric machine sizing and parametric CAD curriculum: 35 electromagnetic
+                      geometry benches across 6 machine zones — Stator Lab, Rotor Lab, Slot Forge, Cage
+                      Foundry, Magnet Vault, and Wound Rotors — with a 2D/3D build studio for IPM, SPM,
+                      induction, salient-pole, and turbo machines, exporting ANSYS Maxwell Python scripts.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <a
+                      href={AUTHOR_PROFILE.fluxLabLiveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#d0864a] text-[#12181c] text-xs font-semibold hover:bg-[#e0965a] transition-colors"
+                    >
+                      <span>Open Live App</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* PubPlot Section */}
+              <div className="border border-[#36424a] bg-[#1b2328] rounded-xl p-6 space-y-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="font-mono text-xs text-[#d0864a] mb-1">
+                      PUBLICATION-READY FIGURES · PYTHON &amp; MATPLOTLIB
+                    </div>
+                    <h3 className="text-xl font-semibold text-[#e9e4da]">
+                      PubPlot — Publication-Ready Academic Graphing Platform
+                    </h3>
+                    <p className="text-sm text-[#9aa5a8] mt-1 max-w-2xl leading-relaxed">
+                      Publication-ready academic graphing platform with journal presets, multi-panel
+                      layouts, curve fitting, and error bars. Exports draw the real figure in PDF, EPS,
+                      PGF, PNG, TIFF, and JPG, and the app generates a reproducible Matplotlib script
+                      for the same figure.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <a
+                      href={AUTHOR_PROFILE.pubPlotLiveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#d0864a] text-[#12181c] text-xs font-semibold hover:bg-[#e0965a] transition-colors"
+                    >
+                      <span>Open Live App</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
                   </div>
                 </div>
               </div>

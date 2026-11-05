@@ -33,7 +33,7 @@
   }
 }
 
-/* Subtle custom scrollbars for academic drawers */
+/* Subtle custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -48,46 +48,3 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #d0864a;
 }
-
-/* Subtle entrance animations for 3D part telemetry spec badge */
-@keyframes badgeSlideInLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-18px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes badgeSlideInRight {
-  0% {
-    opacity: 0;
-    transform: translateX(18px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-badge-slide-in,
-.animate-badge-slide-in-left {
-  animation: badgeSlideInLeft 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.animate-badge-slide-in-right {
-  animation: badgeSlideInRight 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-badge-slide-in,
-  .animate-badge-slide-in-left,
-  .animate-badge-slide-in-right {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-

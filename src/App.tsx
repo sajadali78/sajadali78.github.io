@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  Layers,
   Sliders,
   Copy,
   Check,
@@ -31,11 +30,9 @@ import {
   ParetoCandidate,
 } from './data/portfolioData';
 import type { DossierTab } from './components/DossierModal';
-// Lazy-loaded so the Three.js 3D viewport and the dossier modal are fetched as
-// separate chunks instead of blocking the first paint of the page shell.
-const MachineCanvas3D = lazy(() =>
-  import('./components/MachineCanvas3D').then((m) => ({ default: m.MachineCanvas3D })),
-);
+// Lazy-loaded so the dossier modal is fetched as a separate chunk instead of
+// blocking the first paint of the page shell. The 3D machine viewport was
+// removed: the portfolio is static pages, with no Three.js code loaded.
 const DossierModal = lazy(() =>
   import('./components/DossierModal').then((m) => ({ default: m.DossierModal })),
 );
@@ -57,39 +54,21 @@ export default function App() {
     if (activeModal) setDossierTouched(true);
   }, [activeModal]);
   const [dockCollapsed, setDockCollapsed] = useState<boolean>(false);
-  const [narrativeCollapsed, setNarrativeCollapsed] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Interactive 3D Engineering Workstation State (synchronized with chapters, overridable by user)
+  // Static page state (synchronized with chapters). Skew and operating mode
+  // still drive the torque-ripple chart; the 3D viewport controls are gone.
   const currentChapter = CHAPTERS[chapterIndex];
-  const [explodeAmount, setExplodeAmount] = useState<number>(currentChapter.explodeTarget);
-  const [fluxIntensity, setFluxIntensity] = useState<number>(currentChapter.fluxIntensity);
-  const [showMeshWireframe, setShowMeshWireframe] = useState<boolean>(
-    currentChapter.showMeshWireframe
-  );
-  const [showFluxLines, setShowFluxLines] = useState<boolean>(currentChapter.showFluxLines);
   const [skewEnabled, setSkewEnabled] = useState<boolean>(currentChapter.skewEnabled);
   const [operatingMode, setOperatingMode] = useState<'synchronous' | 'vernier'>(
     currentChapter.operatingMode
   );
-  const [cutawayEnabled, setCutawayEnabled] = useState<boolean>(true);
-  const [rotorSpeedMultiplier, setRotorSpeedMultiplier] = useState<number>(1.0);
-  const [selectedPart, setSelectedPart] = useState<{
-    name: string;
-    spec: string;
-    detail: string;
-    selectionId: number;
-  } | null>(null);
 
-  // Sync 3D machine state when user steps to a new chapter/page
+  // Sync chart state when user steps to a new chapter/page
   const goToChapter = (idx: number) => {
     const clamped = Math.max(0, Math.min(CHAPTERS.length - 1, idx));
     const target = CHAPTERS[clamped];
     setChapterIndex(clamped);
-    setExplodeAmount(target.explodeTarget);
-    setFluxIntensity(target.fluxIntensity);
-    setShowMeshWireframe(target.showMeshWireframe);
-    setShowFluxLines(target.showFluxLines);
     setSkewEnabled(target.skewEnabled);
     setOperatingMode(target.operatingMode);
   };
@@ -105,7 +84,6 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (activeModal) setActiveModal(null);
-        else if (selectedPart) setSelectedPart(null);
         return;
       }
       if (activeModal) return;
@@ -118,28 +96,13 @@ export default function App() {
 
       const key = e.key.toLowerCase();
 
-      // Engineering Dock Hotkeys
+      // Dock Hotkeys
       if (key === 'h') {
         setDockCollapsed((prev) => !prev);
       } else if (key === 'm') {
         setOperatingMode((m) => (m === 'synchronous' ? 'vernier' : 'synchronous'));
       } else if (key === 's') {
         setSkewEnabled((s) => !s);
-      } else if (key === 'b') {
-        setFluxIntensity((f) => (f > 0.5 ? 0.0 : 0.95));
-      } else if (key === 'f') {
-        setShowMeshWireframe((w) => !w);
-      } else if (key === 'c') {
-        setCutawayEnabled((c) => !c);
-      } else if (e.code === 'Space' || e.key === ' ') {
-        e.preventDefault();
-        setRotorSpeedMultiplier((s) => (s > 0 ? 0 : 1));
-      } else if (key === '[') {
-        setExplodeAmount((x) => Math.max(0, +(x - 0.1).toFixed(2)));
-      } else if (key === ']') {
-        setExplodeAmount((x) => Math.min(1, +(x + 0.1).toFixed(2)));
-      } else if (key === 'x') {
-        setExplodeAmount((x) => (x < 0.25 ? 0.35 : x < 0.6 ? 0.75 : 0.0));
       } else if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
         e.preventDefault();
         goToChapter(chapterIndex + 1);
@@ -153,7 +116,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [chapterIndex, activeModal, selectedPart]);
+  }, [chapterIndex, activeModal]);
 
   // Throttled wheel navigation on the narrative overlay
   const wheelCooldownRef = useRef<number>(0);
@@ -172,37 +135,11 @@ export default function App() {
 
   const handleParetoSelect = (cand: ParetoCandidate) => {
     setSkewEnabled(cand.skewDeg >= 2.0);
-    setFluxIntensity(Math.min(1, cand.avgTorque / 11));
   };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#12181c] text-[#e9e4da]">
-      {/* 1. FULL-BLEED 3D ELECTROMAGNETIC MACHINE VIEWPORT (Stable Ref Container) */}
-      <Suspense
-        fallback={
-          <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#12181c]" aria-label="Loading 3D machine view" />
-        }
-      >
-          <MachineCanvas3D
-          cameraPos={currentChapter.cameraPos}
-          cameraTarget={currentChapter.cameraTarget}
-          explodeAmount={explodeAmount}
-          fluxIntensity={fluxIntensity}
-          showMeshWireframe={showMeshWireframe}
-          showFluxLines={showFluxLines}
-          skewEnabled={skewEnabled}
-          operatingMode={operatingMode}
-          cutawayEnabled={cutawayEnabled}
-          rotorSpeedMultiplier={rotorSpeedMultiplier}
-          onPartSelect={(part) => {
-            if (!part) {
-              setSelectedPart(null);
-            } else {
-              setSelectedPart({ ...part, selectionId: Date.now() });
-            }
-          }}
-        />
-      </Suspense>
+
 
       {/* 2. TOP BAR CONTRACT: Brand — 6 Pages (1..6) — Primary Action */}
       <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between gap-6 px-6 py-3.5 bg-[#12181c]/95 border-b border-[#36424a]">
@@ -278,35 +215,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Discreet Selected 3D Component Spec Badge (with polished entrance slide-in animation & dynamic collision avoidance) */}
-      {selectedPart && (
-        <div
-          key={`${selectedPart.name}-${selectedPart.selectionId}`}
-          className={`fixed top-16 z-25 max-w-xs bg-[#161e24]/95 border border-[#d0864a] rounded-xl p-3.5 shadow-2xl backdrop-blur-none ${
-            !narrativeCollapsed && currentChapter.alignment !== 'right'
-              ? 'right-6 animate-badge-slide-in-right'
-              : 'left-6 animate-badge-slide-in-left'
-          }`}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="font-mono text-[11px] text-[#d0864a] tracking-wider">3D PART TELEMETRY</div>
-            <button
-              type="button"
-              onClick={() => setSelectedPart(null)}
-              className="text-xs font-mono text-[#9aa5a8] hover:text-[#e9e4da] cursor-pointer p-0.5 rounded transition-colors"
-              aria-label="Close component telemetry badge"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="text-sm font-semibold text-[#e9e4da] mt-1">{selectedPart.name}</div>
-          <div className="font-mono text-xs text-[#d0864a]/90 mt-0.5">{selectedPart.spec}</div>
-          <p className="text-xs text-[#e9e4da]/85 mt-2 leading-relaxed">{selectedPart.detail}</p>
-        </div>
-      )}
-
-      {/* 3. CHAPTER NARRATIVE / PAGE CONTENT CARD */}
-      {!narrativeCollapsed && (
+{/* 3. CHAPTER NARRATIVE / PAGE CONTENT CARD */}
+      {(
         <aside
           onWheel={handleNarrativeWheel}
           className={`fixed z-20 transition-all duration-300 ${
@@ -344,14 +254,7 @@ export default function App() {
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
-              <button
-                type="button"
-                onClick={() => setNarrativeCollapsed(true)}
-                className="ml-1 px-2 py-0.5 rounded border border-[#36424a] font-mono text-[10px] text-[#9aa5a8] hover:text-[#e9e4da] cursor-pointer"
-                title="Minimize page card for full 3D view"
-              >
-                Minimize
-              </button>
+
             </div>
           </div>
 
@@ -702,21 +605,7 @@ export default function App() {
         </aside>
       )}
 
-      {/* Restore Narrative Button when minimized */}
-      {narrativeCollapsed && (
-        <button
-          type="button"
-          onClick={() => setNarrativeCollapsed(false)}
-          className="fixed top-16 left-6 z-20 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#161e24]/95 border border-[#36424a] hover:border-[#d0864a] text-xs font-mono text-[#e9e4da] cursor-pointer shadow-lg"
-        >
-          <Layers className="w-3.5 h-3.5 text-[#d0864a]" />
-          <span>
-            Show Page {currentChapter.id + 1}: {currentChapter.shortTitle}
-          </span>
-        </button>
-      )}
-
-      {/* 4. UNIFIED COLLAPSIBLE BOTTOM ENGINEERING CONTROL DOCK (<= 15% Viewport Footprint) */}
+{/* 4. UNIFIED COLLAPSIBLE BOTTOM ENGINEERING CONTROL DOCK (<= 15% Viewport Footprint) */}
       <div
         style={{
           bottom: '16px',
@@ -728,9 +617,9 @@ export default function App() {
       >
         {/* Collapse / Expand Toggle Pill */}
         <DockTooltip
-          label={dockCollapsed ? 'Show 3D Engineering Controls' : 'Hide Engineering Controls'}
+          label={dockCollapsed ? 'Show Engineering Controls' : 'Hide Engineering Controls'}
           hotkey="H"
-          description="Toggle the 3D electromagnetic machine engineering dock"
+          description="Toggle the engineering dock"
         >
           <button
             type="button"
@@ -738,7 +627,7 @@ export default function App() {
             className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1 rounded-t-lg bg-[#161e24] border border-b-0 border-[#36424a] text-[11px] font-mono text-[#9aa5a8] hover:text-[#e9e4da] cursor-pointer transition-colors"
           >
             <Sliders className="w-3 h-3 text-[#d0864a]" />
-            <span>{dockCollapsed ? '▴ Show 3D Engineering Controls (H)' : '▾ Hide Controls (H)'}</span>
+            <span>{dockCollapsed ? '▴ Show Engineering Controls (H)' : '▾ Hide Controls (H)'}</span>
             {dockCollapsed ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         </DockTooltip>
@@ -781,35 +670,7 @@ export default function App() {
               })}
             </div>
 
-            {/* Group B: Axial Exploded View Slider */}
-            <DockTooltip
-              label="Axial Exploded View"
-              hotkey={['[', ']', 'X']}
-              description="Displace stator and rotor along axis. [ / ] step by 10%, X cycles presets (0%, 35%, 75%)"
-              className="min-w-[170px] flex-1 max-w-[230px]"
-            >
-              <div className="flex items-center gap-2.5 w-full">
-                <label
-                  htmlFor="explode-slider"
-                  className="font-mono text-[11px] text-[#9aa5a8] whitespace-nowrap shrink-0"
-                >
-                  Explode:{' '}
-                  <span className="text-[#e9e4da] tabular-nums">
-                    {Math.round(explodeAmount * 100)}%
-                  </span>
-                </label>
-                <input
-                  id="explode-slider"
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={explodeAmount}
-                  onChange={(e) => setExplodeAmount(parseFloat(e.target.value))}
-                  className="w-full accent-[#d0864a] cursor-pointer"
-                />
-              </div>
-            </DockTooltip>
+
 
             {/* Group C: Synchronous vs Vernier Mode & Electromagnetic Toggles */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -852,78 +713,13 @@ export default function App() {
                 </button>
               </DockTooltip>
 
-              {/* B-Field Heatmap Toggle */}
-              <DockTooltip
-                label="B-Field Saturation Heatmap"
-                hotkey="B"
-                description="Toggle Ansys Maxwell 2D electromagnetic flux density color map (0.0 T – 2.0 T saturation)"
-              >
-                <button
-                  type="button"
-                  onClick={() => setFluxIntensity((f) => (f > 0.5 ? 0.0 : 0.95))}
-                  className={`px-2.5 py-1 rounded text-xs font-mono border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    fluxIntensity > 0.5
-                      ? 'bg-[#d0864a]/20 border-[#d0864a] text-[#e9e4da]'
-                      : 'bg-[#12181c] border-[#36424a] text-[#9aa5a8]'
-                  }`}
-                >
-                  B-Flux
-                </button>
-              </DockTooltip>
 
-              {/* FEA Mesh Wireframe Toggle */}
-              <DockTooltip
-                label="Finite Element Mesh Wireframe"
-                hotkey="F"
-                description="Overlay 3D finite element discretization mesh lines onto laminations, PMs, and copper windings"
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowMeshWireframe((w) => !w)}
-                  className={`px-2.5 py-1 rounded text-xs font-mono border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    showMeshWireframe
-                      ? 'bg-[#d0864a]/20 border-[#d0864a] text-[#e9e4da]'
-                      : 'bg-[#12181c] border-[#36424a] text-[#9aa5a8]'
-                  }`}
-                >
-                  FEA Mesh
-                </button>
-              </DockTooltip>
 
-              {/* Housing Shell Toggle */}
-              <DockTooltip
-                label="Outer Stator Housing"
-                hotkey="C"
-                description="Toggle the finned aluminum outer housing shell to view internal rotor/stator concentric core"
-              >
-                <button
-                  type="button"
-                  onClick={() => setCutawayEnabled((c) => !c)}
-                  className={`px-2.5 py-1 rounded text-xs font-mono border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    cutawayEnabled
-                      ? 'bg-[#12181c] border-[#36424a] text-[#e9e4da]'
-                      : 'bg-[#d0864a]/20 border-[#d0864a] text-[#e9e4da]'
-                  }`}
-                >
-                  Housing
-                </button>
-              </DockTooltip>
 
-              {/* Rotor Pause/Play */}
-              <DockTooltip
-                label="Rotor Mechanical Rotation"
-                hotkey="Space"
-                description="Pause or resume dynamic mechanical rotation of the hybrid rotor shaft assembly"
-                align="right"
-              >
-                <button
-                  type="button"
-                  onClick={() => setRotorSpeedMultiplier((s) => (s > 0 ? 0 : 1))}
-                  className="px-2.5 py-1 rounded text-xs font-mono bg-[#12181c] border border-[#36424a] hover:border-[#d0864a] text-[#9aa5a8] hover:text-[#e9e4da] whitespace-nowrap shrink-0 cursor-pointer"
-                >
-                  {rotorSpeedMultiplier > 0 ? 'Pause' : 'Rotate'}
-                </button>
-              </DockTooltip>
+
+
+
+
             </div>
           </div>
         )}

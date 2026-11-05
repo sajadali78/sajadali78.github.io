@@ -66,8 +66,10 @@ export const AUTHOR_PROFILE = {
   researchGateUrl: 'https://www.researchgate.net/profile/Sajad-Ali-9',
   linkedinUrl: 'https://www.linkedin.com/in/sajad-ali-engineer',
   githubUrl: 'https://github.com/sajadali78',
-  emSuiteLiveUrl: 'https://sajadali78.github.io/Electrical-Machines/',
+  emSuiteLiveUrl: 'https://em-design-suite.vercel.app/',
   emSuiteRepoUrl: 'https://github.com/sajadali78/Electrical-Machines',
+  fluxLabLiveUrl: 'https://flux-lab-two.vercel.app/',
+  pubPlotLiveUrl: 'https://pubplot.vercel.app/',
   tagline:
     'Bridging physics-based finite element analysis (FEA) with machine-learning surrogate models to accelerate the design of next-generation synchronous and vernier machines.',
   phdObjective:

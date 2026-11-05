@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -30,18 +30,32 @@ import {
   MACHINE_DIMENSIONS,
   ParetoCandidate,
 } from './data/portfolioData';
-import { MachineCanvas3D } from './components/MachineCanvas3D';
+import type { DossierTab } from './components/DossierModal';
+// Lazy-loaded so the Three.js 3D viewport and the dossier modal are fetched as
+// separate chunks instead of blocking the first paint of the page shell.
+const MachineCanvas3D = lazy(() =>
+  import('./components/MachineCanvas3D').then((m) => ({ default: m.MachineCanvas3D })),
+);
+const DossierModal = lazy(() =>
+  import('./components/DossierModal').then((m) => ({ default: m.DossierModal })),
+);
 import {
   TorqueSkewChart,
   ParetoScatterChart,
   EmQuickSizer,
 } from './components/InteractiveCharts';
-import { DossierModal, DossierTab } from './components/DossierModal';
 import { DockTooltip } from './components/DockTooltip';
 
 export default function App() {
   const [chapterIndex, setChapterIndex] = useState<number>(0);
   const [activeModal, setActiveModal] = useState<DossierTab>(null);
+  // Once the dossier has been opened, keep it mounted (it renders nothing while
+  // closed) so its calculator state survives, while its chunk still only loads
+  // on first open.
+  const [dossierTouched, setDossierTouched] = useState<boolean>(false);
+  useEffect(() => {
+    if (activeModal) setDossierTouched(true);
+  }, [activeModal]);
   const [dockCollapsed, setDockCollapsed] = useState<boolean>(false);
   const [narrativeCollapsed, setNarrativeCollapsed] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -164,25 +178,31 @@ export default function App() {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#12181c] text-[#e9e4da]">
       {/* 1. FULL-BLEED 3D ELECTROMAGNETIC MACHINE VIEWPORT (Stable Ref Container) */}
-      <MachineCanvas3D
-        cameraPos={currentChapter.cameraPos}
-        cameraTarget={currentChapter.cameraTarget}
-        explodeAmount={explodeAmount}
-        fluxIntensity={fluxIntensity}
-        showMeshWireframe={showMeshWireframe}
-        showFluxLines={showFluxLines}
-        skewEnabled={skewEnabled}
-        operatingMode={operatingMode}
-        cutawayEnabled={cutawayEnabled}
-        rotorSpeedMultiplier={rotorSpeedMultiplier}
-        onPartSelect={(part) => {
-          if (!part) {
-            setSelectedPart(null);
-          } else {
-            setSelectedPart({ ...part, selectionId: Date.now() });
-          }
-        }}
-      />
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#12181c]" aria-label="Loading 3D machine view" />
+        }
+      >
+          <MachineCanvas3D
+          cameraPos={currentChapter.cameraPos}
+          cameraTarget={currentChapter.cameraTarget}
+          explodeAmount={explodeAmount}
+          fluxIntensity={fluxIntensity}
+          showMeshWireframe={showMeshWireframe}
+          showFluxLines={showFluxLines}
+          skewEnabled={skewEnabled}
+          operatingMode={operatingMode}
+          cutawayEnabled={cutawayEnabled}
+          rotorSpeedMultiplier={rotorSpeedMultiplier}
+          onPartSelect={(part) => {
+            if (!part) {
+              setSelectedPart(null);
+            } else {
+              setSelectedPart({ ...part, selectionId: Date.now() });
+            }
+          }}
+        />
+      </Suspense>
 
       {/* 2. TOP BAR CONTRACT: Brand — 6 Pages (1..6) — Primary Action */}
       <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between gap-6 px-6 py-3.5 bg-[#12181c]/95 border-b border-[#36424a]">
@@ -910,15 +930,19 @@ export default function App() {
       </div>
 
       {/* 5. ACADEMIC DOSSIER DRAWER MODAL (Full Wide Reader for Publications, Thesis, EM Design Suite, CV, Contact) */}
-      <DossierModal
-        activeTab={activeModal}
-        onClose={() => setActiveModal(null)}
-        onSelectTab={(tab) => setActiveModal(tab)}
-        skewEnabled={skewEnabled}
-        operatingMode={operatingMode}
-        onToggleSkew={setSkewEnabled}
-        onToggleMode={setOperatingMode}
-      />
+      {dossierTouched && (
+        <Suspense fallback={null}>
+        <DossierModal
+          activeTab={activeModal}
+          onClose={() => setActiveModal(null)}
+          onSelectTab={(tab) => setActiveModal(tab)}
+          skewEnabled={skewEnabled}
+          operatingMode={operatingMode}
+          onToggleSkew={setSkewEnabled}
+          onToggleMode={setOperatingMode}
+        />
+        </Suspense>
+      )}
     </div>
   );
 }

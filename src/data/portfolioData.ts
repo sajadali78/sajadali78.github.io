@@ -172,7 +172,7 @@ export const EDUCATION = [
     title: 'BE Electrical Engineering',
     place: 'Sukkur IBA University',
     period: 'Aug 2018 – Dec 2022',
-    detail: 'Final-year project: Optimization of Parameters for Biogas Production from Food Waste.',
+    detail: 'Final-year project: Optimization of Parameters for Biogas Production from Food Waste. Activities: Coordinator of the Boys Hostel society; organised the Say No To Drugs campaign; volunteered at ICOMET 2018.',
   },
 ];
 
@@ -185,9 +185,20 @@ export const SKILLS = [
   'Physics-Informed Neural Networks (PINNs)',
   'Surrogate modelling',
   'Multi-physics simulation',
+  'Multi-objective optimization',
   'Brushless wound rotor vernier machines',
   'PM-free synchronous motors',
   'Dual stator topologies',
+  'Vernier machines',
+  'Hybrid-rotor machines',
+  'IPM machines',
+  'Surface PM machines',
+  'SynRM',
+  'Python',
+  'NumPy',
+  'pandas',
+  'scikit-learn',
+  'PyTorch',
 ];
 
 export const LANGUAGES = ['Sindhi', 'Balochi', 'Urdu', 'English'];
@@ -227,6 +238,88 @@ export const REFERENCES = [
     email: 'Ghulam.akbar@iba-suk.edu.pk',
   },
 ];
+
+export const RESEARCH_AREAS = [
+  {
+    title: 'Synchronous machine design',
+    detail:
+      'Hands-on with interior permanent magnet (IPM), spoke-type IPM, surface PM, dual-stator and hybrid-rotor machines. Lead author in Nature Scientific Reports (2026) on a dual-stator hybrid-rotor synchronous-vernier machine.',
+  },
+  {
+    title: 'FEA and surrogate modelling',
+    detail:
+      'Experienced with Ansys Maxwell, Motor-CAD and MATLAB/Simulink. Built large parametric design sweeps and Python automation for KPI extraction (torque, ripple, losses, efficiency).',
+  },
+  {
+    title: 'Machine learning for design',
+    detail:
+      'Python-based regression and classification models and data pipelines applied to FEA datasets for fast design-space exploration, including physics-informed neural networks and surrogate models.',
+  },
+];
+
+export const THESIS = {
+  title: 'Design of Dual Stator Brushless Hybrid Rotor Machine With Synchronous And Vernier Motor Operation',
+  venue: 'Sukkur IBA University · ME thesis',
+  problem:
+    'Wound-rotor synchronous machines need brushes and slip rings, which bring maintenance and sparking. Permanent magnet vernier machines give high torque density but rely heavily on magnets and suit low speeds poorly at high speed. The thesis designs a brushless dual-stator machine that handles both low-speed vernier and high-speed synchronous operation.',
+  models: [
+    'DMDS-WRSVM: brushless dual-mode dual-stator non-salient wound-rotor synchronous and vernier machine.',
+    'DMDS-HRSVM: brushless dual-mode dual-stator hybrid-rotor synchronous and vernier machine.',
+  ],
+  dimensions: ['Stack length 100 mm', 'Airgap 0.5 mm, inner and outer', '24 stator slots', 'Stator winding poles 02 / 04'],
+};
+
+export const WORKFLOWS = [
+  {
+    title: 'Dual-stator sandwiched-rotor vernier machine workflow',
+    detail:
+      'A fully parametric Maxwell 2D model driven by 46 design variables covering slot dimensions, winding parameters, airgap geometry and operating conditions. Double-layer winding across the inner stator, rotor faces and outer stator, with a 90% slot fill factor. An IronPython automation suite of over 850 lines covers geometry, winding, motion band setup, mesh refinement, transient analysis and over 50 output variables, with dq-axis Park transform outputs and Optimetrics sweeps and multi-objective optimisation (Quasi-Newton, NSGA-II).',
+    videoUrl: 'https://www.youtube.com/watch?v=YEq4j4VT8O8',
+  },
+  {
+    title: 'Automated yokeless-stator SPM modelling',
+    detail:
+      'Automated 2D electromagnetic modelling of a dual-rotor yokeless-stator surface permanent magnet machine in Ansys Maxwell using AEDT IronPython. Modelling only; no solved results are claimed here.',
+    videoUrl: '',
+  },
+];
+
+export const WRITING = [
+  {
+    title: 'MDPI Energies paper on DS-BL-WRVM',
+    detail: 'In draft. A paper on the dual-stator brushless wound-rotor vernier machine.',
+  },
+  {
+    title: 'Literature review on data efficiency in FEA-surrogate workflows',
+    detail: 'Manuscript of about 10,300 words, in preparation.',
+  },
+  {
+    title: 'Winding tool for multilayer windings',
+    detail: 'Planned. A tool for multilayer winding layout.',
+  },
+];
+
+export const TOOLS = [
+  'Arduino tooling',
+  'Excel tooling',
+  'Diagrams with draw.io, SVG and Visio',
+  'Equations converted to native Word OMML',
+  'IEEE citation style',
+  'Scripting and custom tooling for practical tasks',
+];
+
+export const SERVICES = [
+  {
+    title: 'Research Skills',
+    detail: 'Electrical machine design research, FEA modelling and surrogate-model workflows.',
+  },
+  {
+    title: 'Engineering Design',
+    detail: 'Machine sizing, geometry, winding and performance work.',
+  },
+];
+
+export const SERVICES_NOTE = 'Available remote or in person (Sukkur). Contact for pricing.';
 
 export const CURRENT_RESEARCH =
   'Current research: a dual-stator brushless hybrid-rotor vernier machine (DS-BL-HRVM), 24 slots and 44 rotor teeth, with an inner sectored stator for brushless excitation and an outer full stator for torque. The geometry was optimised first and then frozen for winding studies, and a paper on the machine is being drafted for MDPI Energies.';

@@ -20,6 +20,13 @@ import {
   HONOURS,
   REFERENCES,
   CURRENT_RESEARCH,
+  RESEARCH_AREAS,
+  THESIS,
+  WORKFLOWS,
+  WRITING,
+  TOOLS,
+  SERVICES,
+  SERVICES_NOTE,
 } from './data/portfolioData';
 
 function Section({
@@ -75,7 +82,9 @@ export default function App() {
           </a>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#9aa5a8]">
             <a href="#about" className="hover:text-[#e9e4da]">About</a>
+            <a href="#research" className="hover:text-[#e9e4da]">Research</a>
             <a href="#machines" className="hover:text-[#e9e4da]">Machines</a>
+            <a href="#thesis" className="hover:text-[#e9e4da]">Thesis</a>
             <a href="#publications" className="hover:text-[#e9e4da]">Publications</a>
             <a href="#projects" className="hover:text-[#e9e4da]">Web Projects</a>
             <a href="#experience" className="hover:text-[#e9e4da]">Experience</a>
@@ -140,6 +149,30 @@ export default function App() {
         </div>
       </Section>
 
+      {/* Research */}
+      <Section id="research" eyebrow="Research" title="Research focus">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {RESEARCH_AREAS.map((r) => (
+            <Card key={r.title}>
+              <h3 className="font-display text-xl mb-2">{r.title}</h3>
+              <p className="text-sm text-[#e9e4da]/85 leading-relaxed">{r.detail}</p>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <p className="text-base text-[#e9e4da]/85 leading-relaxed mb-5">{CURRENT_RESEARCH}</p>
+          <h3 className="font-display text-xl mb-3">Writing and work in progress</h3>
+          <div className="space-y-3">
+            {WRITING.map((w) => (
+              <div key={w.title}>
+                <p className="font-semibold">{w.title}</p>
+                <p className="text-sm text-[#9aa5a8]">{w.detail}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </Section>
+
       {/* Machines */}
       <Section id="machines" eyebrow="Electrical Machines" title="Machines I designed">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -161,6 +194,30 @@ export default function App() {
             </Card>
           ))}
         </div>
+      </Section>
+
+      {/* Thesis */}
+      <Section id="thesis" eyebrow="ME Thesis" title={THESIS.title}>
+        <Card>
+          <p className="font-mono text-xs text-[#d0864a] tracking-wider mb-3">{THESIS.venue}</p>
+          <p className="text-base text-[#e9e4da]/85 leading-relaxed mb-4">{THESIS.problem}</p>
+          <h3 className="font-display text-xl mb-2">Proposed models</h3>
+          <ul className="list-disc pl-5 space-y-1 text-sm text-[#e9e4da]/85 mb-4">
+            {THESIS.models.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+          <ul className="flex flex-wrap gap-1.5">
+            {THESIS.dimensions.map((d) => (
+              <li
+                key={d}
+                className="px-2 py-0.5 rounded bg-[#12181c] border border-[#36424a] font-mono text-[11px] text-[#9aa5a8]"
+              >
+                {d}
+              </li>
+            ))}
+          </ul>
+        </Card>
       </Section>
 
       {/* Publications */}
@@ -195,6 +252,29 @@ export default function App() {
             </Card>
           ))}
         </div>
+      </Section>
+
+      {/* Workflows and tools */}
+      <Section id="workflows" eyebrow="Workflows & Tools" title="Modelling workflows and tools">
+        <div className="space-y-4 mb-6">
+          {WORKFLOWS.map((w) => (
+            <Card key={w.title}>
+              <h3 className="font-display text-xl mb-2">{w.title}</h3>
+              <p className="text-sm text-[#e9e4da]/85 leading-relaxed mb-3">{w.detail}</p>
+              {w.videoUrl && <ExternalLink href={w.videoUrl} label="Watch the workflow video" />}
+            </Card>
+          ))}
+        </div>
+        <ul className="flex flex-wrap gap-2">
+          {TOOLS.map((t) => (
+            <li
+              key={t}
+              className="px-3 py-1.5 rounded-full bg-[#161e24] border border-[#36424a] text-sm text-[#e9e4da]/90"
+            >
+              {t}
+            </li>
+          ))}
+        </ul>
       </Section>
 
       {/* Experience & education */}
@@ -256,6 +336,19 @@ export default function App() {
             </Card>
           ))}
         </div>
+      </Section>
+
+      {/* Services */}
+      <Section id="services" eyebrow="Services" title="What I can help with">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {SERVICES.map((sv) => (
+            <Card key={sv.title}>
+              <h3 className="font-display text-xl mb-2">{sv.title}</h3>
+              <p className="text-sm text-[#e9e4da]/85 leading-relaxed">{sv.detail}</p>
+            </Card>
+          ))}
+        </div>
+        <p className="text-sm text-[#9aa5a8]">{SERVICES_NOTE}</p>
       </Section>
 
       {/* References */}

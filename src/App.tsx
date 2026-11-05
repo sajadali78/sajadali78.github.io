@@ -7,7 +7,7 @@
  * to bottom on a phone or a desktop.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AUTHOR_PROFILE,
   MACHINES,
@@ -70,33 +70,67 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
   );
 }
 
+const NAV_LINKS = [
+  { href: '#about', label: 'About' },
+  { href: '#research', label: 'Research' },
+  { href: '#machines', label: 'Machines' },
+  { href: '#thesis', label: 'Thesis' },
+  { href: '#publications', label: 'Publications' },
+  { href: '#projects', label: 'Web Projects' },
+  { href: '#experience', label: 'Experience' },
+  { href: '#contact', label: 'Contact' },
+];
+
 export default function App() {
   const p = AUTHOR_PROFILE;
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-[#12181c] text-[#e9e4da]">
-      {/* Header */}
+      {/* Header: full nav on desktop, hamburger menu on phones */}
       <header className="sticky top-0 z-30 bg-[#12181c]/95 border-b border-[#36424a]">
-        <div className="max-w-5xl mx-auto px-5 md:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="max-w-5xl mx-auto px-5 md:px-8 py-3 flex items-center justify-between gap-3">
           <a href="#top" className="font-display text-xl text-[#e9e4da]">
             Sajad Ali
           </a>
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#9aa5a8]">
-            <a href="#about" className="hover:text-[#e9e4da]">About</a>
-            <a href="#research" className="hover:text-[#e9e4da]">Research</a>
-            <a href="#machines" className="hover:text-[#e9e4da]">Machines</a>
-            <a href="#thesis" className="hover:text-[#e9e4da]">Thesis</a>
-            <a href="#publications" className="hover:text-[#e9e4da]">Publications</a>
-            <a href="#projects" className="hover:text-[#e9e4da]">Web Projects</a>
-            <a href="#experience" className="hover:text-[#e9e4da]">Experience</a>
-            <a href="#contact" className="hover:text-[#e9e4da]">Contact</a>
+          <nav className="hidden md:flex items-center gap-x-4 text-sm text-[#9aa5a8]">
+            {NAV_LINKS.map((l) => (
+              <a key={l.href} href={l.href} className="hover:text-[#e9e4da]">
+                {l.label}
+              </a>
+            ))}
           </nav>
-          <a
-            href={`mailto:${p.email}?subject=PhD%20opportunity`}
-            className="px-3.5 py-1.5 text-xs font-semibold text-[#12181c] bg-[#d0864a] rounded-lg hover:bg-[#e0965a] whitespace-nowrap"
-          >
-            Contact for PhD
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={`mailto:${p.email}?subject=PhD%20opportunity`}
+              className="px-3.5 py-1.5 text-xs font-semibold text-[#12181c] bg-[#d0864a] rounded-lg hover:bg-[#e0965a] whitespace-nowrap"
+            >
+              Contact for PhD
+            </a>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              className="md:hidden px-3 py-1.5 rounded-lg border border-[#36424a] text-sm text-[#e9e4da]"
+            >
+              {menuOpen ? '✕' : '☰ Menu'}
+            </button>
+          </div>
         </div>
+        {menuOpen && (
+          <nav className="md:hidden border-t border-[#36424a] px-5 py-3 flex flex-col gap-1 text-base">
+            {NAV_LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                className="py-1.5 text-[#9aa5a8] hover:text-[#e9e4da]"
+              >
+                {l.label}
+              </a>
+            ))}
+          </nav>
+        )}
       </header>
 
       {/* Hero */}

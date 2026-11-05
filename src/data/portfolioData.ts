@@ -67,7 +67,6 @@ export const AUTHOR_PROFILE = {
   linkedinUrl: 'https://www.linkedin.com/in/sajad-ali-engineer',
   githubUrl: 'https://github.com/sajadali78',
   emSuiteLiveUrl: 'https://em-design-suite.vercel.app/',
-  emSuiteRepoUrl: 'https://github.com/sajadali78/Electrical-Machines',
   fluxLabLiveUrl: 'https://flux-lab-two.vercel.app/',
   pubPlotLiveUrl: 'https://pubplot.vercel.app/',
   tagline:
